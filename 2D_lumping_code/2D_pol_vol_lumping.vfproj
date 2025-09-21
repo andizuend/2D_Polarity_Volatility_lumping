@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{43B2C428-16A3-48CE-8508-79753DD664F1}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/>
+	</Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" UseCompiler="ifortCompiler">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" WarnInterfaces="true" RealKIND="realKIND8" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" Interfaces="true"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+		<Configuration Name="Release|Win32" UseCompiler="ifortCompiler">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeFull" GenAlternateCodePaths="codeForSSE42" EnableEnhancedInstructionSet="codeArchSSE3" RealKIND="realKIND8" FloatingPointModel="source" FloatingPointSpeculation="fpSpeculationSafe"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+		<Configuration Name="Debug|x64" UseCompiler="ifxCompiler">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" EnableRecursion="true" DisableSpecificDiagnostics="5268" WarnDeclarations="true" WarnUnusedVariables="true" WarnUncalled="true" WarnShape="true" WarnInterfaces="true" LocalSavedScalarsSNaN="true" InitArrays="true" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" BoundsCheck="true" ArrayShapeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" Interfaces="true"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="50000000"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+		<Configuration Name="Release|x64" UseCompiler="ifxCompiler">
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeFull" UseProcessorExtensions="codeExclusivelyHost" EnableRecursion="true" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" FloatingPointSpeculation="fpSpeculationSafe"/>
+			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole" StackReserveSize="50000000"/>
+			<Tool Name="VFResourceCompilerTool"/>
+			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+			<Tool Name="VFCustomBuildTool"/>
+			<Tool Name="VFPreLinkEventTool"/>
+			<Tool Name="VFPreBuildEventTool"/>
+			<Tool Name="VFPostBuildEventTool"/>
+			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
+		</Configuration>
+	</Configurations>
+	<Files>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+			<Filter Name="AIOMFAC_&amp;_System_def">
+				<Filter Name="AIOMFAC-core">
+					<File RelativePath=".\Fortran_code\ModAIOMFACvar.f90"/>
+					<File RelativePath=".\Fortran_code\ModCalcActCoeff.f90"/>
+					<File RelativePath=".\Fortran_code\ModMRpart.f90"/>
+					<File RelativePath=".\Fortran_code\ModSRparam.f90"/>
+					<File RelativePath=".\Fortran_code\ModSRunifac.f90"/>
+					<File RelativePath=".\Fortran_code\SubModDissociationEquil.f90"/>
+				</Filter>
+				<Filter Name="Composition_scale_conversions">
+					<File RelativePath=".\Fortran_code\ModCompScaleConversion.f90"/>
+					<File RelativePath=".\Fortran_code\ModNumericalTransformations.f90"/>
+				</Filter>
+				<Filter Name="PureViscosityCalcCode">
+					<File RelativePath=".\Fortran_code\ModPureViscosPar.f90"/>
+					<File RelativePath=".\Fortran_code\ModViscEyring.f90"/>
+				</Filter>
+				<Filter Name="System_Properties_&amp;_Definitions">
+					<File RelativePath=".\Fortran_code\Mod_InputOutput.f90"/>
+					<File RelativePath=".\Fortran_code\ModComponentNames.f90"/>
+					<File RelativePath=".\Fortran_code\ModSubgroupProp.f90"/>
+					<File RelativePath=".\Fortran_code\ModSystemProp.f90"/>
+					<File RelativePath=".\Fortran_code\SubModDefSystem.f90"/>
+				</Filter>
+			</Filter>
+			<Filter Name="Lumping_schemes">
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\ActCoeffRatio_Volatility.f90"/>
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\kmeans.f90"/>
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\Lumping_schemes.f90"/>
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\ModGridCellSurrogate.f90"/>
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\ModInOutLumping.f90"/>
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\ModLumping.f90"/>
+				<File RelativePath=".\Fortran_code\Fortran_OS_commands\ModOScommands.f90"/>
+				<File RelativePath=".\Fortran_code\FortranCode_Lumping_Schemes\quicksort_algorithm.f90"/>
+			</Filter>
+			<Filter Name="Main_Interface">
+				<File RelativePath=".\Fortran_code\Main_IO_Lumping.f90"/>
+				<File RelativePath=".\Fortran_code\Mod_kind_param.f90"/>
+				<File RelativePath=".\Fortran_code\Fortran_OS_commands\ModStringFunctions.f90">
+				</File>
+				<File RelativePath="..\Input_lumping\SETTINGS_2DLumping.txt">
+				</File>
+			</Filter>
+			<Filter Name="Root_solver">
+				<File RelativePath=".\Fortran_code\brent.f90"/>
+				<File RelativePath=".\Fortran_code\Mod_MINPACK.f90"/>
+				<File RelativePath=".\Fortran_code\zerobracket_inwards.f90"/>
+			</Filter>
+		</Filter>
+	</Files>
+	<Globals/>
+</VisualStudioProject>
