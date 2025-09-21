@@ -1,0 +1,48 @@
+Settings file for 2D lumping framework (--> use this file to set parameters for  calculations with the AIOMFAC-2DLumping project)
+====================================== 
+
+Value			: 	Parameter; Description
+-------------- 	  	---------------------------------------------
+input_1409.txt 	: 	Name of AIOMFAC-web style input file defining the system components; file needs to be in directory path .././Input_lumping/
+
+298.15			:	[K] Temperature; used for generated *_Conc_and_T.txt files;
+none	 		:   add an electrolyte component to new input files of lumped systems; options are: none, AS, abs (none = add no electrolyte, AS = ammonium sulfate, abs = ammonium bisulfate);
+0.0				:	[micro-gram/m^3] electrolyte component mass concentration to be added (if not 'none' above);
+
+true	 		:	change_nd;  if true, files will be renumbered and labelled with file number 1260 for original system and 1261, 1262, .. for medoid, midpoint etc. methods
+7				:  	vpMethod;  for calculating the saturation vapor pressure: (1-9 from umansysprop; Nanoolal, Nanoolal_BP_Stein_Brown, etc.); 7 = EVAPORATION
+true 			: 	onlySurrogatesOutput;  if true, only surrogate component properties will be output from the Lumping_schemes.
+true			:   massweightedKmeans;  if true (default), the k-means method uses mass concentrations of components as weighting; if false, uniform weights are used.
+
+01 				:	YaxisChoice;  for lumping: choice 1 = log10(actcoeff_ratio), 2 = O:C ratio, 3 = log10(O:C), 4 = approx. mean oxidation state of carbon.
+08 				: 	nxintervals;  the number of x-axis intervals for lumping grid;
+04 				: 	nyintervals;  the number of y-axis intervals for lumping grid;
+-1 				: 	cluster_num;  number of clusters for k-means method; a negative value indicates that cluster_num = (nxintervals*nyintervals) 
+					and corrected by the number of surrogate components detected with the gridded methods (instead of a prescribed cluster number).  
+0.0				:	log10(psat/[1 Pa]) value; SetVolatThresholdVal; the upper threshold value for highly volatile components that are lumped to a special surrogate;
+-----------------------------------------------------------------					
+
+
+		
+>> Entries below this line will not be read as input; you can use it for saving previous settings, notes etc. <<
+-----------------------------------------------------------------------------------------
+
+# Example of valid parameter settings:
+
+input_1415.txt 	
+
+298.15
+none
+0.0
+
+true	 		
+false			
+true 
+true
+
+01    			
+06 				
+03 				
+-1 		
+
+-1.0
