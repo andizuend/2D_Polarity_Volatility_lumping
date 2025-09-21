@@ -1,0 +1,375 @@
+ 
+ MESSAGE from AIOMFAC: input file exists.
+ 
+ MESSAGE from AIOMFAC: input file has passed the first line text validation and 
+ will be read.
+ 
+ MESSAGE from AIOMFAC: reading component data from input file.
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           1
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           2
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           3
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           4
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           5
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           6
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           7
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           8
+ 
+ MESSAGE from AIOMFAC: found a component cpno =           9
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          10
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          11
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          12
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          13
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          14
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          15
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          16
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          17
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          18
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          19
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          20
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          21
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          22
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          23
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          24
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          25
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          26
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          27
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          28
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          29
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          30
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          31
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          32
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          33
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          34
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          35
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          36
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          37
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          38
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          39
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          40
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          41
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          42
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          43
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          44
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          45
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          46
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          47
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          48
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          49
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          50
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          51
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          52
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          53
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          54
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          55
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          56
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          57
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          58
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          59
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          60
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          61
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          62
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          63
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          64
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          65
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          66
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          67
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          68
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          69
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          70
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          71
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          72
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          73
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          74
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          75
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          76
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          77
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          78
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          79
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          80
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          81
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          82
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          83
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          84
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          85
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          86
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          87
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          88
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          89
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          90
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          91
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          92
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          93
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          94
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          95
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          96
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          97
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          98
+ 
+ MESSAGE from AIOMFAC: found a component cpno =          99
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         100
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         101
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         102
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         103
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         104
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         105
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         106
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         107
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         108
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         109
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         110
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         111
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         112
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         113
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         114
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         115
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         116
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         117
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         118
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         119
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         120
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         121
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         122
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         123
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         124
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         125
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         126
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         127
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         128
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         129
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         130
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         131
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         132
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         133
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         134
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         135
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         136
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         137
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         138
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         139
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         140
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         141
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         142
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         143
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         144
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         145
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         146
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         147
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         148
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         149
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         150
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         151
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         152
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         153
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         154
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         155
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         156
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         157
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         158
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         159
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         160
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         161
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         162
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         163
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         164
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         165
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         166
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         167
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         168
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         169
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         170
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         171
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         172
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         173
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         174
+ 
+ MESSAGE from AIOMFAC: found a component cpno =         175
+ 
+ MESSAGE from AIOMFAC: component data read.
+ MESSAGE from AIOMFAC: number of components:          175
+ 
+ MESSAGE from AIOMFAC: composition points read.
+ MESSAGE from AIOMFAC: number of points:            1
+ 
+MESSAGE from AIOMFAC: input file read, starting AIOMFAC mixture definitions and initialization... 
+
+ +-+-+-+-+
+ Final warning indicator (an entry '00' means no warnings found):
+00
+ +-+-+-+-+
+ 
+ ########
+ Final error indicator (an entry '00' means no errors found):
+00
+ ########
