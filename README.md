@@ -15,7 +15,7 @@ The framework includes the Aerosol Inorganic–Organic Mixtures Functional group
 
 ----
 # Quick guide to running the 2D lumping framework
-The 2D lumping framework can be run simply via an executable (see example below), but a more powerful and convenient option is to run it via an IDE like MS Visual Studio Community with Intel's oneAPI ifx Fortran compiler (see [Dependencies](#dependencies)). For this purpose the Visual Studio solution (`.sln`) and related project files are included in this repository under `./2D_lumping_code/2D_Pol_Vol_lumping_with_AIOMFAC.sln`.
+The 2D lumping framework can be run simply via an executable (see example below), but a more powerful and convenient option is to run it via an IDE like MS Visual Studio Community with Intel's oneAPI ifx Fortran compiler (see [Dependencies](#dependencies)). For this purpose the Visual Studio solution (`.sln`) and related project files are included in this repository under `./2D_lumping_code/2D_Pol_Vol_lumping_with_AIOMFAC.sln`. The 2D lumping framework requires three distinct types of input files to characterize the components of a chemical system, generated with external tools: (1) An AIOMFAC-web-style input file listing the system components, (2) a pure-component vapour pressure file, and (3) a file listing concentrations of all components. The details for the (automated) generation of such files and specific format requirements are described below. Specific parameters for the choice of polarity axis and resolution of the lumping step are stated by the user in an editable `SETTINGS_2DLumping.txt` file. All the input and settings files need to be copied into folder `Input_lumping`.
 
 #### Necessary input files:
 1. tbd (see details in the article by Amaladhasan et al.).
