@@ -7,17 +7,17 @@ The framework includes the Aerosol Inorganic–Organic Mixtures Functional group
 - `SMILES_to_AIOMFAC_inp` As part of the outputs from the framework, input files for the AIOMFAC(-web) model are generated for each surrogate system. This is done, in part, by calling the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC). For this, the 2D-lumping framework program expects to be located and accessible under the same parent directory as the 'SMILES_to_AIOMFAC_inp' tool folder.
 - The `CustomizedPlots_Dislin` folder contains an additional Fortran program for the generation of plots using 2D framework output located in the folder `Output_lumping`. Such plots may require specific settings near the top of the `CustomizedPlotting` program .f90 file; e.g., for `lumpResChar`, `maxrows`, and the file range to be considered. Output from `CustomizedPlots_Dislin` will be located in its own `Output_Plots` subfolder.
 - (Optional on Windows) A [MS Visual Studio Community](https://visualstudio.microsoft.com/vs/community/) installation equipped with [Intel's oneAPI for Fortran](https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-windows/2025-0/intel-fortran-essentials.html). OneAPI provides the Intel `ifx` Fortran compiler (available for Windows or Linux).
-- (Optional) **Dislin** plotting library. The plotting code also expects that Dislin is installed at its default location of `c:\dislin` (on a Windows machine). [Dislin download and installation information](https://www.dislin.de/index.html "Dislin") is provided on its official website. For examples see also the [Dislin_x_y_plots repository](https://github.com/andizuend/Dislin_x_y_plot). If plotting with Dislin not is desired, the whole `CustomizedPlots_Dislin` folder can be removed from your local copy.
+- (Optional) **Dislin** plotting library. The plotting code also expects that Dislin is installed at its default location of `c:\dislin` (on a Windows machine). [Dislin download and installation information](https://www.dislin.de/index.html "Dislin") is provided on its official website. For examples see also the [Dislin_x_y_plots repository](https://github.com/andizuend/Dislin_x_y_plot). If plotting with Dislin is not desired, the whole `CustomizedPlots_Dislin` folder can be removed from your local copy of this repository (it has no impact on the 2D lumping calculations).
 
 # Quick guide to running the 2D lumping framework
-The 2D lumping framework can be run simply via an executable, but a more powerful and convenient option is to run it via an IDE like MS Visual Studio Community with Intel's oneAPI ifx Fortran compiler. For this purpose the Visual Studio solution (`.sln`) and related project files are included in this repository under `./2D_lumping_code/2D_Pol_Vol_lumping_with_AIOMFAC.sln`.
+The 2D lumping framework can be run simply via an executable (see example below), but a more powerful and convenient option is to run it via an IDE like MS Visual Studio Community with Intel's oneAPI ifx Fortran compiler (see [Dependencies](#dependencies)). For this purpose the Visual Studio solution (`.sln`) and related project files are included in this repository under `./2D_lumping_code/2D_Pol_Vol_lumping_with_AIOMFAC.sln`.
 
 #### Necessary input files:
 1. tbd (see details in the article by Amaladhasan et al.).
 
 ## Running a customized case
-Once the input file and settings file has been prepared, you are ready to run the 2D lumping framework.
-- Option 1: (MS Visual Studio on Windows)
-	- TBA 
-- Option 2: (via executable)
-	- Open ...
+Once the AIOMFAC-web-style input file and the lumping framework settings file have been prepared, you are ready to run the 2D lumping framework.
+#### Option 1: (using MS Visual Studio on Windows)
+- TBA 
+#### Option 2: (using an executable)
+- Open ...
