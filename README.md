@@ -20,7 +20,9 @@ The 2D lumping framework can be run simply via an executable (see example below)
 The 2D lumping framework requires three distinct types of input files to characterize the components of a chemical system, generated with external tools: (1) An AIOMFAC-web-style input file listing the system components, (2) a pure-component vapour pressure file, and (3) a file listing concentrations of all components. The details for the (automated) generation of such files and specific format requirements are described below. Specific parameters for the choice of polarity axis and resolution of the lumping step are stated by the user in an editable `SETTINGS_2DLumping.txt` file. All the input and settings files need to be copied into folder `Input_lumping`.
 
 #### Necessary input files:
-1. tbd (see details in the article by Amaladhasan et al.).
+1. AIOMFAC-web-style input file named `input_????.txt` (placed in folder `Input_lumping`). For example, the file `input_1409.txt`, present in this repository's folder `Input_lumping`, shows the correct format and structure. Such files can be generated automatically by using the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) with a list of SMILES for the organic molecules. Follow the detailed instructions in that [related S2AS repository](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC/edit/main/README.md). 
+
+2. Concentrations file named `input_concentrations_????.txt` for all of the components listed in the `input_????.txt` file.
 
 ## Running a customized case
 Once the AIOMFAC-web-style input file and the lumping framework settings file have been prepared, you are ready to run the 2D lumping framework.
