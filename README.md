@@ -39,9 +39,8 @@ There are 13 settings (see the value column in the file) which should be checked
 
 #### Option 1: (using MS Visual Studio on Windows)
 - Open the MS Visual Studio (VS) solution (`2D_Pol_Vol_lumping_with_AIOMFAC.sln` inside folder `2D_lumping_code`). VS customization aside, you should see a screen as shown in the following image.
-- 
-<p align="center"> <img src="./images_guide/VS_screen_view1.jpg" alt="Visual Studio screenshot" style="width:100%"/> </p> 
-The 
+<p align="center"> <img src="./images_guide/VS_screen_view1.jpg" alt="Visual Studio screenshot" style="width:85%"/> </p> 
+- The 
 
 
 #### Option 2: (using an executable)
