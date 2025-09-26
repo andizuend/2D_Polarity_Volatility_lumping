@@ -55,8 +55,10 @@ Generally, after running the lumping framework program, you will find several se
 The listed  surrogate selection methods are described in detail elsewhere (Amaladhasan et al.).
 
 For each case of lumping, there are two distinct sets of text files generated (these can be viewed with any decent text editor). The ones with the prefix "input_" refer to input files prepared for use in the AIOMFAC-based equilibrium partitioning model, with the following meanings (using 1261 as example case): 
-  - input_1261.txt: AIOMFAC-web-style input file of the lumped system
-  - input_1261_aw_inp.txt: preset water activity  (= relative humidity) levels set for gas–particle partitioning calculations
-  - input_1261_Conc_and_T.txt: temperature and concentration data prepared for all non-water mixture components (corresponding to the list of water activity levels)
-  - input_1262_EVAP_AB.txt: listing of pure-organic component vapour pressure parameters A and B (usually the ones computed with the EVAPORATION method from the vapour pressure file) for all surrogate system components
-  - input_1261_SMILES.txt: list of SMILES of all organic components of the surrogate system
+  | File name  | Meaning   |
+  | :--------- | :-------  |
+  | input_1261.txt | AIOMFAC-web-style input file of the lumped system of surrogte components
+  | input_1261_aw_inp.txt | preset water activity  (= relative humidity) levels set for gas–particle partitioning calculations
+  | input_1261_Conc_and_T.txt |  temperature and concentration data prepared for all non-water mixture components (corresponding to the list of water activity levels)
+  | input_1262_EVAP_AB.txt | list of pure-component vapour pressure parameters A and B (usually the ones computed with the EVAPORATION method from the vapour pressure file) of all organic surrogate components
+  | input_1261_SMILES.txt | list of SMILES of all organic components of the surrogate system
