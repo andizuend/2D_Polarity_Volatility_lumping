@@ -45,7 +45,7 @@ There are 13 settings (see the value column in the file) which should be checked
 ### Option 2: (generating an executable via command terminal)
 - Open ...
 
-## Understanding 2D lumping output
+## Understanding the 2D lumping output files
 Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see also Amaladhasan et al. for examples). When such relabeling is enabled, the 4-digit number part of the file names carry the following meaning:
   - 1260: full input system data (non-lumped reference case)
   - 1261: system of surrogates selected with the medoid method
