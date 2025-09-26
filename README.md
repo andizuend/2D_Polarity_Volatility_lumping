@@ -13,7 +13,7 @@ The framework includes the Aerosol Inorganic–Organic Mixtures Functional group
   
 - (optional) **Dislin** plotting library: The included plotting program expects that Dislin is installed at its default location of `c:\dislin` (on a Windows machine). [Dislin download and installation information](https://www.dislin.de/index.html "Dislin") is provided on its official website. For examples see also the [Dislin_x_y_plots repository](https://github.com/andizuend/Dislin_x_y_plot). If plotting with Dislin is not desired, the whole `CustomizedPlots_Dislin` folder can be removed from your local copy of this repository (it is distinct and has no impact on the 2D lumping computations).
 
-----
+-----
 # Quick guide to running the 2D lumping framework
 The 2D lumping framework can be run simply via an executable (see example below), but a more powerful and convenient option is to run it via an IDE like MS Visual Studio Community with Intel's oneAPI ifx Fortran compiler (see [Dependencies](#dependencies)). For this purpose the Visual Studio solution (`.sln`) and related project files are included in this repository under `./2D_lumping_code/2D_Pol_Vol_lumping_with_AIOMFAC.sln`. 
 
@@ -39,13 +39,15 @@ There are 13 settings (see the value column in the file) which should be checked
 
 ### Option 1: (using MS Visual Studio on Windows)
 - Open the MS Visual Studio (VS) solution (`2D_Pol_Vol_lumping_with_AIOMFAC.sln` inside folder `2D_lumping_code`). VS customization and related window arrangements aside, you should see a screen similar to the one shown in the following image. <p align="center"> <img src="./images_guide/VS_screen_view1.jpg" alt="Visual Studio screenshot" style="width:85%"/> </p> 
-- Build the solution or project (which compiles and links the modules and objects) and then click on ▶ Start to run the 2D lumping framework with the settings chosen earlier.
-- The VS IDE is also a convenient way to study — and potentially edit and debug — the Fortran code, especially the files relevant for the 2D lumping methods. The key files to consider are: (i) Main_IO_Lumping.f90: this is the main program that reads the settings file and initializes AIOMFAC and the lumping module; (ii) ActCoeffRatio_Volatility.f90: this is the subroutine for calculating the component-specific activity coefficient ratios using the AIOMFAC model. This subroutine, among other tasks, also calls and loads the vapour pressure file, via `call ReadCompVaporPressures(...)`, and the concentration/composition file, via `call ReadMolarComposition(...)`. Finally, this subroutine generates a set of output files for the full system provided (i.e. the state prior to any lumping), those are copied to folder `Output_lumping`. (iii) Lumping_schemes.f90: this is the subroutine that prepares and coordinates the application of different surrogate component selection methods (gridded as well as weighted $k$-means clustering). Near the end of this subroutine, the output to `.txt` files is processed, all of which end up in folder `Output_lumping` (see details on outputs below). 
+- Build the solution or project (which compiles and links the modules and objects) and then click on ▶ Start to run the 2D lumping framework with the parameters set  previously.
+  
+- The VS IDE is also a convenient way to study — and potentially edit and debug — the Fortran code, especially the files relevant for the 2D space properties and the surrogate selection methods. The key files to consider are: (i) Main_IO_Lumping.f90: this is the main program that reads the settings file and initializes AIOMFAC and the lumping module; (ii) ActCoeffRatio_Volatility.f90: this is the subroutine for calculating the component-specific activity coefficient ratios using the AIOMFAC model. This subroutine, among other tasks, also calls and loads the vapour pressure file, via `call ReadCompVaporPressures(...)`, and the concentration/composition file, via `call ReadMolarComposition(...)`. Finally, this subroutine generates a set of output files for the full system provided (i.e. the state prior to any lumping), those are copied to folder `Output_lumping`. (iii) Lumping_schemes.f90: this is the subroutine that prepares and coordinates the application of different surrogate component selection methods (gridded as well as weighted $k$-means clustering). Near the end of this subroutine, the output to `.txt` files is processed, all of which end up in folder `Output_lumping` (see details on outputs below). 
 
 ### Option 2: (generating an executable via command terminal)
 - Open ...
 
-## Understanding the 2D lumping output files
+-----
+## Understanding the generated output
 Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see also Amaladhasan et al. for examples). When such relabeling is enabled, the 4-digit number part of the file names carry the following meaning:
   - 1260: full input system data (non-lumped reference case)
   - 1261: system of surrogates selected with the medoid method
