@@ -34,7 +34,7 @@ The 2D lumping framework requires three distinct types of input files to charact
 ## Running a customized case
 To run a specific case (number) once the necessary input files have been prepared, go to folder `Input_lumping` and use a text editor (e.g. notepad or within Visual Studio) to modify the lumping framework settings file named `SETTINGS_2DLumping.txt`. This file allows you to set the conditions for a particular lumping calculation; see image below. 
 
-<img src="./images_guide/settings_file_example_image.jpg" alt="Settings file example" width="740px">
+<img src="./images_guide/settings_file_example_image.jpg" alt="Settings file example" width="740px" text-align: center>
 
 There are ~13 settings (the value column in the file) that should be checked and modified if needed. In particular, on line 6 of the settings file, make sure that the correct AIOMFAC-web-style input file is stated (e.g. input_1409.txt). On lines 17--19, set the choice of polarity axis (1 is the default) and the number of x-axis and y-axis intervals (i.e. the resolution of the lumping grid). Line 22 allows one to set a high-volatility threshold in terms of the value of $\log_{10}(p^{sat}/[1 \mathrm{Pa}])$. As stated in the parameter description text of the settings file, this threshold is used to lump all components of volatilities higher than this into a special surrogate (see also description in *Amaladhasan et al.*).
 
