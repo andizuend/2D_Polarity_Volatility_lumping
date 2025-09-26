@@ -38,7 +38,9 @@ To run a specific case (number) once the necessary input files have been prepare
 There are 13 settings (see the value column in the file) which should be checked and modified where desired. In particular, on line 6 of the settings file, make sure the correct AIOMFAC-web input file is listed (e.g. input_1409.txt). On lines 17&ndash;19, set the choice of polarity axis (1 is the default) and the number of x-axis (volatility and y-axis (polarity) intervals, i.e. the resolution of the lumping grid. Line 22 allows one to set a high-volatility threshold in terms of the value of $\log_{10}(p^{sat}/[1 \mathrm{Pa}])$. As stated in the related parameter description of the settings file, this threshold is used to lump all components of volatilities higher than this into a special surrogate (see also description in *Amaladhasan et al.*).
 
 #### Option 1: (using MS Visual Studio on Windows)
-- Open the MS Visual Studio (VS) solution (`2D_Pol_Vol_lumping_with_AIOMFAC.sln` inside folder `2D_lumping_code`). 
+- Open the MS Visual Studio (VS) solution (`2D_Pol_Vol_lumping_with_AIOMFAC.sln` inside folder `2D_lumping_code`). VS customization aside, you should see a screen as shown in the following image.
+<p align="center"> <img src="./images_guide/VS_screen_view1.jpg" alt="Visual Studio screenshot" style="width:80%"/> </p>
+
 
 #### Option 2: (using an executable)
 - Open ...
