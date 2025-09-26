@@ -19,7 +19,7 @@ The 2D lumping framework can be run simply via an executable (see example below)
 
 The 2D lumping framework requires three distinct types of input files to characterize the components of a chemical system, generated with external tools: (1) An AIOMFAC-web-style input file listing the system components, (2) a file listing concentrations of all components, and (3) a pure-component vapour pressure file. The details for the generation of such files and specific format requirements are described below. Specific parameters for the choice of polarity axis and resolution of the lumping step are stated by the user in an editable `SETTINGS_2DLumping.txt` file. The three input files characterizing a specific chemical system and the settings file need to be present/copied into folder `Input_lumping`.
 
-#### Necessary input files:
+### Necessary input files:
 1. **AIOMFAC input file**: An AIOMFAC-web-style input file named `input_????.txt` is needed, where ???? represents a 4-digit case number of your choosing. This file needs to be copied into folder `Input_lumping`. For example, the file `input_1409.txt`, included in this repository's `Input_lumping` folder, shows the correct format and structure. Such files can be generated automatically by using the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) with a list of SMILES for the organic molecules. Follow the detailed instructions in that related [S2AS repository](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC/edit/main/README.md). 
 
 2. **Concentrations file**: A file listing the water vapour and organic (gas phase) concentrations is needed. It should be named `input_concentrations_????.txt` (with the same 4 digit number as for step 1.). An example file, `input_concentrations_1409.txt`, is included in folder `Input_lumping`. The concentration inputs per component would typically be obtained from the output of a case-specific chemical reaction simulation (see examples in Amaladhasan et al., *in prep.*). Note that when using the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) to generate the AIOMFAC input file, the same input concentrations file is also needed to ensure consistency and alignment with the processed SMILES and related AIOMFAC input file.  
@@ -37,10 +37,19 @@ To run a specific case (number) once the necessary input files have been prepare
 
 There are 13 settings (see the value column in the file) which should be checked and modified where desired. In particular, on line 6 of the settings file, make sure the correct AIOMFAC-web input file is listed (e.g. input_1409.txt). On lines 17&ndash;19, set the choice of polarity axis (1 is the default) and the number of x-axis (volatility and y-axis (polarity) intervals, i.e. the resolution of the lumping grid. Line 22 allows one to set a high-volatility threshold in terms of the value of $\log_{10}(p^{sat}/[1 \mathrm{Pa}])$. As stated in the related parameter description of the settings file, this threshold is used to lump all components of volatilities higher than this into a special surrogate (see also description in *Amaladhasan et al.*).
 
-#### Option 1: (using MS Visual Studio on Windows)
+### Option 1: (using MS Visual Studio on Windows)
 - Open the MS Visual Studio (VS) solution (`2D_Pol_Vol_lumping_with_AIOMFAC.sln` inside folder `2D_lumping_code`). VS customization and related window arrangements aside, you should see a screen similar to the one shown in the following image. <p align="center"> <img src="./images_guide/VS_screen_view1.jpg" alt="Visual Studio screenshot" style="width:85%"/> </p> 
 - Build the solution or project (which compiles and links the modules and objects) and then click on ▶ Start to run the 2D lumping framework with the settings chosen earlier.
 - The VS IDE is also a convenient way to study — and potentially edit and debug — the Fortran code, especially the files relevant for the 2D lumping methods. The key files to consider are: (i) Main_IO_Lumping.f90: this is the main program that reads the settings file and initializes AIOMFAC and the lumping module; (ii) ActCoeffRatio_Volatility.f90: this is the subroutine for calculating the component-specific activity coefficient ratios using the AIOMFAC model. This subroutine, among other tasks, also calls and loads the vapour pressure file, via `call ReadCompVaporPressures(...)`, and the concentration/composition file, via `call ReadMolarComposition(...)`. Finally, this subroutine generates a set of output files for the full system provided (i.e. the state prior to any lumping), those are copied to folder `Output_lumping`. (iii) Lumping_schemes.f90: this is the subroutine that prepares and coordinates the application of different surrogate component selection methods (gridded as well as weighted $k$-means clustering). Near the end of this subroutine, the output to `.txt` files is processed, all of which end up in folder `Output_lumping` (see details on outputs below). 
 
-#### Option 2: (using an executable)
+### Option 2: (generating an executable via command terminal)
 - Open ...
+
+## Understanding 2D lumping output
+Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to relable the output file (case) numbers to the 1260–1264 range (which is enabled in the `SETTINGS_2DLumping.txt` file by default). The reason for this is to generate a labeling sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see Amaladhasan et al. for discussion). When such relabeling is enabled, the 4-digit number part of the files names indicate the following meaning:
+  - 1260: full input system data (non-lumped reference case)
+  - 1261: system of surrogates selected with the medoid method
+  - 1262: system of surrogates selected with the midpoint method
+  - 1263: system of surrogates selected with the mass-weighted medoid method
+  - 1264: system of surrogates selected with the $k$-means clustering method
+
