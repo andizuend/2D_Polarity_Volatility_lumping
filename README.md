@@ -52,4 +52,8 @@ Generally, after running the lumping framework program, you will find several se
   - 1262: system of surrogates selected with the midpoint method
   - 1263: system of surrogates selected with the mass-weighted medoid method
   - 1264: system of surrogates selected with the $k$-means clustering method
+The listed  surrogate selection methods are described in detail elsewhere (Amaladhasan et al.).
 
+For each case of lumping, there are two distinct sets of files generated. The ones with the prefix "input_" refer to input files prepared for use in the AIOMFAC-based equilibrium partitioning model, with the following meanings: 
+  - dfg
+  - 
