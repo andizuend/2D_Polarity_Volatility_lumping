@@ -46,7 +46,7 @@ There are 13 settings (see the value column in the file) which should be checked
 - Open ...
 
 ## Understanding 2D lumping output
-Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to relable the output file (case) numbers to the 1260–1264 range (which is enabled in the `SETTINGS_2DLumping.txt` file by default). The reason for this is to generate a labeling sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see Amaladhasan et al. for discussion). When such relabeling is enabled, the 4-digit number part of the files names indicate the following meaning:
+Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see also Amaladhasan et al. for examples). When such relabeling is enabled, the 4-digit number part of the file names carry the following meaning:
   - 1260: full input system data (non-lumped reference case)
   - 1261: system of surrogates selected with the medoid method
   - 1262: system of surrogates selected with the midpoint method
@@ -54,6 +54,9 @@ Generally, after running the lumping framework program, you will find several se
   - 1264: system of surrogates selected with the $k$-means clustering method
 The listed  surrogate selection methods are described in detail elsewhere (Amaladhasan et al.).
 
-For each case of lumping, there are two distinct sets of files generated. The ones with the prefix "input_" refer to input files prepared for use in the AIOMFAC-based equilibrium partitioning model, with the following meanings: 
-  - dfg
-  - 
+For each case of lumping, there are two distinct sets of text files generated (these can be viewed with any decent text editor). The ones with the prefix "input_" refer to input files prepared for use in the AIOMFAC-based equilibrium partitioning model, with the following meanings (using 1261 as example case): 
+  - input_1261.txt: AIOMFAC-web-style input file of the lumped system
+  - input_1261_aw_inp.txt: preset water activity  (= relative humidity) levels set for gas–particle partitioning calculations
+  - input_1261_Conc_and_T.txt: temperature and concentration data prepared for all non-water mixture components (corresponding to the list of water activity levels)
+  - input_1262_EVAP_AB.txt: listing of pure-organic component vapour pressure parameters A and B (usually the ones computed with the EVAPORATION method from the vapour pressure file) for all surrogate system components
+  - input_1261_SMILES.txt: list of SMILES of all organic components of the surrogate system
