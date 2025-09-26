@@ -58,7 +58,7 @@ For each case of lumping, there are two distinct sets of text files generated (t
   | File name  | Meaning   |
   | :--------- | :-------  |
   | input_1261.txt | AIOMFAC-web-style input file of the (lumped) system of surrogte components
-  | input_1261_aw_inp.txt | preset water activity  (= relative humidity) levels set for gas–particle partitioning calculations
+  | input_1261_aw_inp.txt | list of preset water activity  (= relative humidity) levels for gas–particle partitioning calculations (these values are set in file ActCoeffRatio_Volatility.f90)
   | input_1261_Conc_and_T.txt |  temperature and concentration data prepared for all non-water mixture components (corresponding to the list of water activity levels)
   | input_1262_EVAP_AB.txt | list of pure-component vapour pressure parameters A and B (usually the ones computed with the EVAPORATION method from the vapour pressure file) of all organic surrogate components
   | input_1261_SMILES.txt | list of SMILES of all organic components of the surrogate system (for potential use in AIOMFAC)
