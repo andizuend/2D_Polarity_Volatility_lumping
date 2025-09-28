@@ -43,16 +43,16 @@ use ModLumping, only : ActCoeffRatio_Volatility, change_nd, cluster_num, eladdMa
 
 implicit none
 !set preliminary AIOMFAC-input-related parameters:
-integer,parameter :: maxpoints = 2                          !limit maximum number of composition points; here set to only 2 for activity ratio computation
-integer,parameter :: ninpmax = int(1E+5)                    !set the maximum number of mixture components allowed (preliminary parameter)
+integer,parameter :: maxpoints = 2                              !maximum number of composition points; here set to only 2 for activity ratio computation
+integer,parameter :: ninpmax = int(1E+5)                        !set the maximum number of mixture components allowed (preliminary parameter)
 !local variables:
 character(len=4) :: version_2DPVLF, version_AIOMFAC
 character(len=200) :: filename, text
 character(len=3000) :: filepath, folderpathout, txtfilein  
-character(len=200),dimension(:),allocatable :: cpnameinp    !list of assigned component names (from input file)
+character(len=200),dimension(:),allocatable :: cpnameinp        !list of assigned component names (from input file)
 integer :: allocstat, errorind, i, istat, ncp, nn, npoints, &
     & nspecmax, unito, warningflag, warningind, unt
-integer,dimension(:,:),allocatable :: cpsubg                !list of input component subgroups and corresponding subgroup quantities
+integer,dimension(:,:),allocatable :: cpsubg                    !list of input component subgroups and corresponding subgroup quantities
 real(wp) :: TKelvin
 real(wp),dimension(:),allocatable :: T_K
 real(wp),dimension(:,:),allocatable :: composition
