@@ -46,18 +46,19 @@ There are ~13 settings (see the value column in the file) which should be checke
 - The VS IDE is also a convenient way to study — and potentially edit and debug — the Fortran code, especially the files relevant for the 2D space properties and the surrogate selection methods. The key files to consider are: (i) Main_IO_Lumping.f90: this is the main program that reads the settings file and initializes AIOMFAC and the lumping module; (ii) ActCoeffRatio_Volatility.f90: this is the subroutine for calculating the component-specific activity coefficient ratios using the AIOMFAC model. This subroutine, among other tasks, also calls and loads the vapour pressure file, via `call ReadCompVaporPressures(...)`, and the concentration/composition file, via `call ReadMolarComposition(...)`. Finally, this subroutine generates a set of output files for the full system provided (i.e. the state prior to any lumping), those are copied to folder `Output_lumping`. (iii) Lumping_schemes.f90: this is the subroutine that prepares and coordinates the application of different surrogate component selection methods (gridded as well as weighted $k$-means clustering). Near the end of this subroutine, the output to `.txt` files is processed, all of which end up in folder `Output_lumping` (see details on outputs below). 
 
 ### Option 2: generating an executable via command terminal (example for Linux)
-[Linux] (or via WSL on Windows): In principle, all that is necessary to run the 2D polarity—volatility program is an available exectuable file (.exe on Windows, .out on Linux). For convenience, we have included a makefile that enables generating such an executable in a straightforward manner. The only dependency is that you have a recent GNU Fortran (gfortran) compiler version installed (check in a terminal with `gfortran --version`). Our tests were conducted with gfortran v13.3.0, but any version after v11 should work. To use make and generate an executable do the following:
-- In a command terminal, navigate to the project's subfolder `2D_lumping_code`
+[Linux] (or via WSL on Windows): In principle, all that is necessary to run the 2D polarity—volatility program is an available exectuable file (.exe on Windows, .out on Linux). For convenience, we have included a makefile that enables generating such an executable in a straightforward manner. The only dependency is that you have a recent GNU Fortran (gfortran) compiler version installed (check in a terminal with `gfortran --version`). Our tests were conducted with gfortran v13.3.0, but any version after v11 should work. To use make to generate an executable do the following:
+- In a command terminal, navigate (`cd`) to the project's folder `2D_lumping_code`.
 - This folder should contain a file `src_list.txt` and a file `makefile` (confirm with command `ls`). The former lists the relative paths of all the Fortran source files to be considered during the compilation. The makefile contains the instructions for compilation and linking as well as compiler flags (if needed, those could be modified by experienced users for debugging or other tests).
-- Enter command `make`
+- Enter command `make`.
 - gfortran will be used to compile all files and link them into an exectable named `2D_Pol_Vol.out`. If after completion of the make step, you see the `2D_Pol_Vol.out` in the folder, this program building step was successful.
-- To run the program, due to its dependence on the python code of the S2AS__SMILES_to_AIOMFAC tool, we first need to set an appropriate local virtual Python environment (venv):
-  -  (only if venv is not already installed on your system) execute sudo apt install python3-venv
-  - create a new venv with command python3 -m venv .venv
-  - activate your new venv so Python is using it; command: source .venv/bin/activate
+- If desired, `make clean` can be executed to clean up the `2D_lumping_code` folder and the related source code folders. With this command, the module and object files generated during compilation will be deleted.
+
+#### Running the compiled and linked program 
+- To run the `2D_Pol_Vol.out` program, due to its indirect dependence on the Python code of the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) for some of its output processing, we need to set an appropriate virtual Python environment (venv):
+  - Activate the venv related to the S2AS tool, so Python is using it. In the following, we assume that the relative path to, and folder name of, the locally installed S2AS tool are "../../S2AS__SMILES_to_AIOMFAC/" (if the folder name differs in your case, adjust the following command accordingly). Execute command:\
+  `source ../../S2AS__SMILES_to_AIOMFAC/.venv/bin/activate`
 - After the Python venv is set, we are ready to run the program with the configured settings file, enter command `./2D_Pol_Vol.out`
 - Subsequently, we could modify the settings file and/or the input files for different cases without the need to regenerate the executable file.
-- If desired, `make clean` can be executed to clean up the `2D_lumping_code` folder and the related source code folders from the module and object files generated during compilation; however, note that this command also deletes the `.out` program file.
 
 -----
 ## Understanding the generated output
