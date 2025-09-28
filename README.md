@@ -1,4 +1,4 @@
-# 2D Polarity—Volatility lumping framework
+# 2D Polarity–Volatility lumping framework
 This repository provides code-level access to a 2D framework for the characterization, visualization and lumping of gas and/or aerosol components into an adjustable set of surrogate components to represent a complex system of hundreds to tens of thousands of components. The 2D space and related lumping approaches are based on the predicted polarities and volatilities of the system's molecules.
 This 2D framework is described in detail in a related scientific modeling article by Amaladhasan et al. (*submitted*).
 The framework includes the Aerosol Inorganic–Organic Mixtures Functional groups Activity Coefficients ([AIOMFAC](https://aiomfac.lab.mcgill.ca "AIOMFAC")) model (core code) to enable the computation of activity coefficient ratios as one option for expressing the polarity of organic molecules. The surrogate selection methods include grid-based sampling of the 2D polarity–volatility space or the use of a *k*-means-based mass-weighted medoid clustering method. The latter is the recommended method when computationl cost is not a relevant factor; see the discussion in Amaladhasan et al. (*submitted*).  
@@ -46,7 +46,7 @@ There are ~13 settings (see the value column in the file) which should be checke
 - The VS IDE is also a convenient way to study — and potentially edit and debug — the Fortran code, especially the files relevant for the 2D space properties and the surrogate selection methods. The key files to consider are: (i) Main_IO_Lumping.f90: this is the main program that reads the settings file and initializes AIOMFAC and the lumping module; (ii) ActCoeffRatio_Volatility.f90: this is the subroutine for calculating the component-specific activity coefficient ratios using the AIOMFAC model. This subroutine, among other tasks, also calls and loads the vapour pressure file, via `call ReadCompVaporPressures(...)`, and the concentration/composition file, via `call ReadMolarComposition(...)`. Finally, this subroutine generates a set of output files for the full system provided (i.e. the state prior to any lumping), those are copied to folder `Output_lumping`. (iii) Lumping_schemes.f90: this is the subroutine that prepares and coordinates the application of different surrogate component selection methods (gridded as well as weighted $k$-means clustering). Near the end of this subroutine, the output to `.txt` files is processed, all of which end up in folder `Output_lumping` (see details on outputs below). 
 
 ### Option 2: generating an executable via command terminal (example for Linux)
-[Linux] (or via WSL on Windows): In principle, all that is necessary to run the 2D polarity—volatility program is an available exectuable file (.exe on Windows, .out on Linux). For convenience, we have included a makefile that enables generating such an executable in a straightforward manner. The only dependency is that you have a recent GNU Fortran (gfortran) compiler version installed (check in a terminal with `gfortran --version`). Our tests were conducted with gfortran v13.3.0, but any version after v11 should work. To use make to generate an executable do the following:
+[Linux] (or via WSL on Windows): In principle, all that is necessary to run the 2D polarity–volatility program is an available exectuable file (.exe on Windows, .out on Linux). For convenience, we have included a makefile that enables generating such an executable in a straightforward manner. The only dependency is that you have a recent GNU Fortran (gfortran) compiler version installed (check in a terminal with `gfortran --version`). Our tests were conducted with gfortran v13.3.0, but any version after v11 should work. To use make to generate an executable do the following:
 - In a command terminal, navigate (`cd`) to the project's folder `2D_lumping_code`.
 - This folder should contain a file `src_list.txt` and a file `makefile` (confirm with command `ls`). The former lists the relative paths of all the Fortran source files to be considered during the compilation. The makefile contains the instructions for compilation and linking as well as compiler flags (if needed, those could be modified by experienced users for debugging or other tests).
 - Enter command `make`.
@@ -63,12 +63,15 @@ There are ~13 settings (see the value column in the file) which should be checke
 
 -----
 ## Understanding the generated output
-Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see also Amaladhasan et al. for examples). When such relabeling is enabled, the 4-digit number part of the file names carry the following meaning:
+> [!NOTE]
+> Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see Amaladhasan et al. for examples).
+> When such relabeling is enabled, the 4-digit number part of the file names carry the following meaning:
   - 1260: full input system data (non-lumped reference case)
   - 1261: system of surrogates selected with the medoid method
   - 1262: system of surrogates selected with the midpoint method
   - 1263: system of surrogates selected with the mass-weighted medoid method
   - 1264: system of surrogates selected with the $k$-means clustering method
+
 The listed  surrogate selection methods are described in detail elsewhere (Amaladhasan et al.).
 
 For each case of lumping, there are two distinct sets of text files generated (these can be viewed with any decent text editor). The ones with the prefix "input_" refer to input files prepared for use in the AIOMFAC-based equilibrium partitioning model, with the following meanings (using 1261 as example case): 
@@ -87,7 +90,8 @@ Three additional files are generated per case number:
  | LumpedConc_1261_Medoid_08x04.txt | lists of the mass and molar concentrations as well as molar masses of the surrogate components and their identities (comp_ID)
  | SystemCompProp_1261_Medoid_08x04.txt | lists of the determined pure-component properties of the surrogate components; e.g. elemental O:C ratio, H:C ratio, mean carbon oxidation state, vapour pressure at targeted temperature, activity coefficient ratio, molar mass and gas-phase saturation concentration
 
- Aside from providing information about the selected surrogate components (and, in case of 1260, the full system), these three files are used in the `CustomizedPlots_Dislin` program to generate plots of the 2D space and related component distributions.
+> [!NOTE] 
+> Aside from providing information about the selected surrogate components (and, in case of 1260, the full system), these three files are used in the `CustomizedPlots_Dislin` program to generate plots of the 2D space and related component distributions.
 
  
 
