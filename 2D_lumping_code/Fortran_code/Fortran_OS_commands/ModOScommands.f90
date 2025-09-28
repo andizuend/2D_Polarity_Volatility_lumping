@@ -47,12 +47,10 @@ public
     
     isWindowsOS = isWindowsPlatform()  !function call
     if (isWindowsOS) then
-        !call execute_command_line('cd', EXITSTAT=Estat, CMDSTAT=Cstat) !display current path
         command = 'copy "'//trim(file_name) //'" "'//trim(file_name_new)//'" > NUL'
         command2 = Replace_Text(command, "/", "\") !replace forward- by backslashes for Windows commands
     else !on a LINUX OS?
-        !call execute_command_line('pwd', EXITSTAT=Estat, CMDSTAT=Cstat) !display current path
-        command2 = 'cp "'//trim(file_name) //'" "'//trim(file_name_new)//'" > NUL'
+        command2 = 'cp "'//trim(file_name) //'" "'//trim(file_name_new)//'" > /dev/null'
     endif
     call execute_command_line(trim(command2), EXITSTAT=Estat, CMDSTAT=Cstat)
 
