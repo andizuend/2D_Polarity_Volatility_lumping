@@ -51,7 +51,7 @@ There are ~13 settings (see the value column in the file) which should be checke
 - This folder should contain a file `src_list.txt` and a file `makefile` (confirm with command `ls`). The former lists the relative paths of all the Fortran source files to be considered during the compilation. The makefile contains the instructions for compilation and linking as well as compiler flags (if needed, those could be modified by experienced users for debugging or other tests).
 - Enter command `make`.
 - gfortran will be used to compile all files and link them into an exectable named `2D_Pol_Vol.out`. If after completion of the make step, you see the `2D_Pol_Vol.out` in the folder, this program building step was successful.
-- If desired, `make clean` can be executed to clean up the `2D_lumping_code` folder and the related source code folders. With this command, the module and object files generated during compilation will be deleted.
+- If desired, `make clean` can be executed to clean up the `2D_lumping_code` folder and the related source code folders. The module and object files generated during compilation will be deleted while the executable program (.out file) will be kept.
 
 #### Running the compiled and linked program 
 - To run the `2D_Pol_Vol.out` program, due to its indirect dependence on the Python code of the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) for some of its output processing, we need to set an appropriate virtual Python environment (venv):
