@@ -51,7 +51,7 @@ There are ~13 settings (see the value column in the file) which should be checke
   - This folder should contain a file `src_list.txt` and a file `makefile` (confirm with command `ls`). The former lists the relative paths of all the Fortran source files to be considered during the compilation. The makefile contains the instructions for compilation and linking as well as compiler flags (if needed, those could be modified by experienced users for debugging or other tests).
   - Enter command `make`
   - gfortran will be used to compile all files and link them into an exectable named `2D_Pol_Vol.out`.
-  - To run the program, due to its dependence on the python code of the S2AS__SMILES_to_AIOMFAC tool and related specific python environment needed, we first need to set an appropriate local Python environment:
+  - To run the program, due to its dependence on the python code of the S2AS__SMILES_to_AIOMFAC tool and related specific python environment needed, we first need to set an appropriate local Python environment (see also details for the S2AS tool described [here](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC/tree/main?tab=readme-ov-file#1-python-and-pip-installation--updates)):
   - After the Python environment is set, we are ready to execute with the configured settings file, enter command `./2D_Pol_Vol.out`
   - Subsequently, we could modify the settings file and/or the input files for different cases without the need to regenerate the executable file.
   - If desired, `make clean` can be executed to clean up the `2D_lumping_code` folder and the related source code folders from the module and object files generated during compilation; however, note that this command also deletes the `.out` program file.
