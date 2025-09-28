@@ -54,10 +54,11 @@ There are ~13 settings (see the value column in the file) which should be checke
 - If desired, `make clean` can be executed to clean up the `2D_lumping_code` folder and the related source code folders. The module and object files generated during compilation will be deleted while the executable program (.out file) will be kept.
 
 #### Running the compiled and linked program 
-- To run the `2D_Pol_Vol.out` program, due to its indirect dependence on the Python code of the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) for some of its output processing, we need to set an appropriate virtual Python environment (venv):
-  - Activate the venv related to the S2AS tool, so Python is using it. In the following, we assume that the relative path to, and folder name of, the locally installed S2AS tool are "../../S2AS__SMILES_to_AIOMFAC/" (if the folder name differs in your case, adjust the following command accordingly). Enter command:\
+> [!NOTE]
+> To run the `2D_Pol_Vol.out` program, due to its indirect dependence on the Python code of the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) for some of its output processing, we need to set an appropriate virtual Python environment (venv):
+- Activate the venv related to the S2AS tool, so Python is using it. In the following, we assume that the relative path to, and folder name of, the locally installed S2AS tool are "../../S2AS__SMILES_to_AIOMFAC/" (if the folder name differs in your case, adjust the following command accordingly). Enter command:\
   `source ../../S2AS__SMILES_to_AIOMFAC/.venv/bin/activate`
-- After the Python venv is set, we are ready to run the program with the configured settings file, enter command \ `./2D_Pol_Vol.out`
+- After the Python venv is set, we are ready to run the program with the configured settings file, enter command <br> `./2D_Pol_Vol.out`
 - Subsequently, we could modify the settings file and/or the input files for different cases and execute the 2D_Pol_Vol.out program again without the need to regenerate the executable file.
 
 -----
