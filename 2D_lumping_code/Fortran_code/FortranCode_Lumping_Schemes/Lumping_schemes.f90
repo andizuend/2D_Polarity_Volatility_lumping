@@ -12,7 +12,7 @@ contains
 !*   Dept. Atmospheric and Oceanic Sciences, McGill University                          *
 !*                                                                                      *
 !*   -> created:        2019-03-07                                                      *
-!*   -> latest changes: 2025-07-07                                                      *
+!*   -> latest changes: 2025-09-28                                                      *
 !*                                                                                      *
 !*   :: License ::                                                                      *
 !*   This program is free software: you can redistribute it and/or modify it under the  *
@@ -31,10 +31,12 @@ module subroutine Lumping_schemes(nn, norg1, psatmethod, TK, psat, OtoC, HtoC, m
                     & actcoeff_ratio, MolarMass, MassConc1, EVAP_paramA, EVAP_paramB, SMILES)
 
 use Mod_kind_param, only : wp
+
 use ModInOutLumping, only : ReadCompVaporPressures, ReadMolarComposition, Add_Electrolyte_Component, &
     & OutputComponentProperties, OutputLumpedConcentrations, OutputLumpedSMILES, Output_aw_levels,   &
     & OutputConc_and_T, OutputVaporPressureParam, OutputGridlines, OutputKmeansCluster,              &
-    & SMILES_to_AIOMFAC_inputFile, awlevels, ndiout, linemax  
+    & SMILES_to_AIOMFAC_inputFile, awlevels, ndiout, linemax 
+
 use ModGridCellSurrogate, only : aspectRatio_XtoY, magnX, magnY, KmeansClusteringSurrogates, &
     & LocGridCellSurrogate_Medoid, LocGridCellSurrogate_MassWeighted_Medoid, LocGridCellSurrogate_Midpoint
 
@@ -159,8 +161,8 @@ ygridl = [(lylim +intervaly*j, j = 0,nyintervals)]
 !assign the components to grid cells within the selected coordinate system:
 do i = norg1,nn
     if (.not. is_highVolatComp(i)) then
-        j = minloc(Xaxis(i) - xgridl(:), mask = Xaxis(i) - xgridl(:) > 0.0_wp, dim=1) 
-        k = minloc(Yaxis(i) - ygridl(:), mask = Yaxis(i) - ygridl(:) > 0.0_wp, dim=1)
+        j = minloc(Xaxis(i) - xgridl(:), mask = Xaxis(i) - xgridl(:) >= 0.0_wp, dim=1) 
+        k = minloc(Yaxis(i) - ygridl(:), mask = Yaxis(i) - ygridl(:) >= 0.0_wp, dim=1)
         if (MassConc(i) <= 0.0_wp) then  !the grid indices might be out of bounds, so check:
             j = max(min(j, nxintervals), 1) 
             k = max(min(k, nyintervals), 1) 
@@ -370,22 +372,22 @@ do ns = 1,nschemes
         call OutputKmeansCluster(nn, norg1, dim_num, clust_no, cluster, cluster_center, cluster_population, cluster_surrogate, filename)
     endif
     !----
-    !output files used as inputs directly with AIOMFAC gas-particle partitioning calculation:
-    if (change_nd) then                                                         !output files used for input in Gas2Part calc:
+    !output files used as inputs for AIOMFAC gas--particle partitioning calculations:
+    if (change_nd) then
         filename = "input_"//chfnum//'_EVAP_AB.txt'  
         call OutputVaporPressureParam(nn, norg1, filename, Lmethod, EVAP_paramA, EVAP_paramB, SMILES, MassConcLumped)
         filename = "input_"//chfnum//'_SMILES.txt'  !!"smiles_"//chfnum//'.txt'
         call OutputLumpedSMILES(nn, norg1, filename, MassConcLumped, SMILES)
-        !generate an AIOMFAC-web style input file using the SMILES list of surrogate components only (for use with AIOMFAC gas--particle partitioning calc.):
-        fname2 = filename                                                       !name of generated SMILES file of surrogate compounds;
+        !generate an AIOMFAC-web style input file using the SMILES list of surrogate components only:
+        fname2 = filename                                                   !name of generated SMILES file of surrogate compounds;
         filename = "input_"//chfnum//".txt"
-        call SMILES_to_AIOMFAC_inputFile(fname2, filename)                      !needs access and uses external Python code (Tools_for_SMILES_conversion);
+        call SMILES_to_AIOMFAC_inputFile(fname2, filename)                  !needs access and uses external Python code (S2AS tool);
         call Add_Electrolyte_Component(filename, elcpname, eladdMassConc)   !potentially add an electrolyte component to the generated input file;
         filename = "input_"//chfnum//'_aw_inp.txt'
         call Output_aw_levels(filename, awlevels)
         filename = "input_"//chfnum//'_Conc_and_T.txt'
         call OutputConc_and_T(nn, norg1, linemax, filename, Lmethod, TK, MassConcLumped, MolarMass, elcpname, eladdMassConc)
-        call SLEEP(1)
+        !call sleep(1)
     endif
     !----
 enddo !nschemes

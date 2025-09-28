@@ -12,7 +12,7 @@ contains
 !*   Dept. Atmospheric and Oceanic Sciences, McGill University                          *
 !*                                                                                      *
 !*   -> created:        2018                                                            *
-!*   -> latest changes: 2025-07-07                                                      *
+!*   -> latest changes: 2025-09-27                                                      *
 !*                                                                                      *
 !*   :: License ::                                                                      *
 !*   This program is free software: you can redistribute it and/or modify it under the  *
@@ -38,7 +38,7 @@ use ModCalcActCoeff, only : AIOMFAC_calc
 use ModInOutLumping, only : ReadCompVaporPressures, ReadMolarComposition, Add_Electrolyte_Component, &
     & OutputComponentProperties, OutputLumpedConcentrations, OutputLumpedSMILES, Output_aw_levels,   &
     & OutputConc_and_T, OutputVaporPressureParam, awlevels, chYaxis, linemax, fpathin, fpathout,     &
-    & folderpathout, inpnum, parentInpFile, ndiout, outpnum
+    & inpnum, parentInpFile, ndiout, outpnum
 use ModOScommands, only : copy_file
 use qsort_c_module, only : QsortC
 
@@ -54,7 +54,7 @@ character(len=15) :: psatmethod, Lmethod, resol
 character(len=200) :: filename, filein, fileout
 character(len=200),dimension(:),allocatable :: SMILES
 character(len=200),dimension(2) :: cpnameRefcp 
-character(len=100),dimension(9) :: methodNames 
+character(len=:),dimension(:),allocatable :: methodNames 
 !--
 integer :: i, k, ndi, ncp, addi, addn, nc, ncomp, refcp1, refcp2, norg1, nsubset, nstart, nend, nTemp
 integer,dimension(:),allocatable :: compIDdat, compIDdatTemp
@@ -74,8 +74,8 @@ logical :: duplicates
 awlevels = [0.99_wp, 0.98_wp, 0.96_wp, 0.95_wp, 0.94_wp, 0.92_wp, 0.90_wp, 0.85_wp, 0.80_wp, 0.75_wp, &
           & 0.70_wp, 0.65_wp, 0.60_wp, 0.50_wp, 0.40_wp, 0.30_wp, 0.20_wp, 0.15_wp, 0.10_wp, 0.01_wp, 0.001_wp]
 linemax = size(awlevels)        !number of water activity (RH) levels to be used in AIOMFAC partitioning calculations
-methodNames(1:9) = ["VP_N_BP_N", "VP_N_BP_SB", "VP_N_BP_JR", "VP_MY_BP_N", &
-                    & "VP_MY_BP_SB", "VP_MY_BP_JR", "EVAP", "EVAP2", "SIMPOL"]
+methodNames = [character(len=12) :: "VP_N_BP_N", "VP_N_BP_SB", "VP_N_BP_JR", "VP_MY_BP_N", &
+                                  & "VP_MY_BP_SB", "VP_MY_BP_JR", "EVAP", "EVAP2", "SIMPOL"]
 
 !####################################################
 
@@ -346,7 +346,8 @@ write(*,'(A)') "running the various gridded lumping schemes"
 call Lumping_schemes(nn, norg1, psatmethod, TKelvin, psat, OtoC, HtoC, meanOS_C, &
         actcoeff_ratio, MolarMass, TotalMassConc, EVAP_paramA, EVAP_paramB, SMILES)
 
-deallocate( cpname, parentInpFile, actcoeff_ratio, EVAP_paramA, EVAP_paramB, OtoC, HtoC, psat, SMILES, awlevels, MolarMass, TotalMassConc ) 
+deallocate( cpname, parentInpFile, actcoeff_ratio, EVAP_paramA, EVAP_paramB, OtoC, HtoC, psat, &
+    & SMILES, awlevels, MolarMass, TotalMassConc, methodNames ) 
 
 write(*,*)
 write(*,'(A,/)') "completed lumping system components and mass concentrations to sets of surrogate components"

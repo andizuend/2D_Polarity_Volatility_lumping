@@ -655,7 +655,7 @@ contains  !module subroutines...
 
 
 !==================================================================================================================================
-    !Generate an AIOMFAC-web style input file using only the SMILES of the determined surrogate components.
+    !Generate an AIOMFAC-web-style input file using only the SMILES of the determined surrogate components.
     !This subroutine will do this via access to our Python SMILES conversion code (from the folder SMILES_to_AIOMFAC_inp).
     !For this subroutine to work properly, Python needs to be installed as well as other packages used in 
     !SMILES_to_AIOMFAC_inp, such as the epam Indigo API.
@@ -670,13 +670,47 @@ contains  !module subroutines...
     !local variables:
     character(len=200) :: inpPath, pathTools
     character(len=300) :: command, command2, f1pathName, f2pathName
-    integer :: Estat, Cstat
-    logical :: isWindowsOS
+    integer :: n, Estat, Cstat
+    logical :: isWindowsOS, it_exists
     !.................
+    
+    !check whether this is run on a Windows OS platform (or Linux):    
+    isWindowsOS = isWindowsPlatform() 
     
     !define commands to call Python script for SMILES--SMARTS--AIOMFAC subgroup conversion and input file writing:
     inpPath = '../Output_lumping/'                  !relative path for accessing smiles_XXXX.txt file.
-    pathTools = '../../SMILES_to_AIOMFAC_inp/'      !relative path from 2D lumping framework project directory to the SMILES_to_AIOMFAC_inp tool
+    
+    !determine relative path from 2D lumping framework project directory to the SMILES_to_AIOMFAC_inp tool
+    do n = 1,7
+        select case(n)
+        case(1)
+            pathTools = '../../SMILES_to_AIOMFAC/'     
+        case(2)
+            pathTools = '../../S2AS__SMILES_to_AIOMFAC/' 
+        case(3)
+            pathTools = '../../SMILES_to_AIOMFAC-main/'
+        case(4)
+            pathTools = '../../S2AS__SMILES_to_AIOMFAC-main/'
+        case(5)
+            pathTools = '../../S2AS/'
+        case(6)
+            pathTools = '../../SMILES_to_AIOMFAC_inp/'
+        case default
+            write(*,*) ''
+            write(*,'(A,/)') "** ERROR from subroutine SMILES_to_AIOMFAC_inputFile **: failed finding the &
+                &relative path from the 2D lumping framework project directory to the SMILES_to_AIOMFAC &
+                &directory. This likely means that the SMILES_to_AIOMFAC tool is not installed/included &
+                &where it is expected, e.g. at '../../SMILES_to_AIOMFAC/', or its name differs from the few &
+                &variations tested. See information about dependencies of this project in the README.md file."
+            read(*,*)
+            pathTools = '../../S2AS__SMILES_to_AIOMFAC/'
+        end select 
+        inquire (file = trim(pathTools)//'SMILES_to_AIOMFAC_input.py', exist = it_exists)
+        if (it_exists) then
+            !found the targeted folder with that file so keep this in pathTools
+            exit
+        endif
+    enddo
     
     !(1) For ease of use of local folder structure, the SMILES file for conversion is first copied to the InputFiles 
     !folder of "SMILES_to_AIOMFAC_inp";
@@ -684,11 +718,10 @@ contains  !module subroutines...
     f2pathName = trim(pathTools)//'InputFiles/'//Smilesfname
     call copy_file(f1pathName, f2pathName)
     
-    !(2) run the Python script for SMILES conversion to input file:    
-    isWindowsOS = isWindowsPlatform() 
+    !(2) run the Python script for SMILES conversion to input file:
     command = 'python '//trim(pathTools)//'SMILES_to_AIOMFAC_input.py '//trim(pathTools)//'InputFiles/'//trim(Smilesfname)
     if (isWindowsOS) then
-        command2 = Replace_Text(command, "/", "\") !replace forward by backslashes for Windows commands
+        command2 = Replace_Text(command, "/", "\")                  !replace forward by backslashes for Windows commands
     else !Linux, MacOS, ...
         command2 = command
     endif
