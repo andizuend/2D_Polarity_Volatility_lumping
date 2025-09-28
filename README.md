@@ -19,7 +19,7 @@ The 2D lumping framework can be run simply via an executable (see example below)
 
 The 2D lumping framework requires three distinct types of input files to characterize the components of a chemical system, generated with external tools: (1) An AIOMFAC-web-style input file listing the system components, (2) a file listing concentrations of all components, and (3) a pure-component vapour pressure file. The details for the generation of such files and specific format requirements are described below. Specific parameters for the choice of polarity axis and resolution of the lumping step are stated by the user in an editable `SETTINGS_2DLumping.txt` file. The three input files characterizing a specific chemical system and the settings file need to be present/copied into folder `Input_lumping`.
 
-### Necessary input files:
+## Necessary input files
 1. **AIOMFAC input file**: An AIOMFAC-web-style input file named `input_????.txt` is needed, where ???? represents a 4-digit case number of your choosing. This file needs to be copied into folder `Input_lumping`. For example, the file `input_1409.txt`, included in this repository's `Input_lumping` folder, shows the correct format and structure. Such files can be generated automatically by using the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) with a list of SMILES for the organic molecules. Follow the detailed instructions in that related [S2AS repository](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC/edit/main/README.md). 
 
 2. **Concentrations file**: A file listing the water vapour and organic (gas phase) concentrations is needed. It should be named `input_concentrations_????.txt` (with the same 4 digit number as for step 1.). An example file, `input_concentrations_1409.txt`, is included in folder `Input_lumping`. The concentration inputs per component would typically be obtained from the output of a case-specific chemical reaction simulation (see examples in Amaladhasan et al., *submitted*). Note that when using the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC) to generate the AIOMFAC input file, the same input concentrations file is also needed to ensure consistency and alignment with the processed SMILES and related AIOMFAC input file.  
@@ -60,6 +60,7 @@ There are ~13 settings (see the value column in the file) which should be checke
   `source ../../S2AS__SMILES_to_AIOMFAC/.venv/bin/activate`
 - After the Python venv is set, we are ready to run the program with the configured settings file, enter command <br> `./2D_Pol_Vol.out`
 - Subsequently, we could modify the settings file and/or the input files for different cases and execute the 2D_Pol_Vol.out program again without the need to regenerate the executable file.
+
 
 -----
 ## Understanding the generated output
