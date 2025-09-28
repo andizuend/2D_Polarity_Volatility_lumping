@@ -39,18 +39,19 @@ To run a specific case (4-digit number) once the necessary input files have been
 
 There are ~13 settings (see the value column in the file) which should be checked and modified where desired. In particular, on line 6 of the settings file, make sure the correct AIOMFAC-web input file name is listed (e.g. input_1409.txt). On lines 17&ndash;19, set the choice of polarity axis (1 is the default) and the number of x-axis (volatility and y-axis (polarity) intervals, i.e. the resolution of the lumping grid. Line 22 allows one to set a high-volatility threshold in terms of the value of $\log_{10}(p^{sat}/[1 \mathrm{Pa}])$. As stated in the related parameter description of the settings file, this threshold is used to lump all components of volatilities higher than this into a special surrogate (see also description in *Amaladhasan et al.*).
 
-### Option 1: using MS Visual Studio on Windows
+### Option 1: using MS Visual Studio (on Windows)
 - Open the MS Visual Studio (VS) solution (`2D_Pol_Vol_lumping_with_AIOMFAC.sln` inside folder `2D_lumping_code`). VS customization and related window arrangements aside, you should see a screen similar to the one shown in the following image. <p align="center"> <img src="./images_guide/VS_screen_view1.jpg" alt="Visual Studio screenshot" style="width:85%"/> </p> 
 - Build the solution or project (which compiles and links the modules and objects) and then click on ▶ Start to run the 2D lumping framework with the parameters set  previously.
   
 - The VS IDE is also a convenient way to study — and potentially edit and debug — the Fortran code, especially the files relevant for the 2D space properties and the surrogate selection methods. The key files to consider are: (i) Main_IO_Lumping.f90: this is the main program that reads the settings file and initializes AIOMFAC and the lumping module; (ii) ActCoeffRatio_Volatility.f90: this is the subroutine for calculating the component-specific activity coefficient ratios using the AIOMFAC model. This subroutine, among other tasks, also calls and loads the vapour pressure file, via `call ReadCompVaporPressures(...)`, and the concentration/composition file, via `call ReadMolarComposition(...)`. Finally, this subroutine generates a set of output files for the full system provided (i.e. the state prior to any lumping), those are copied to folder `Output_lumping`. (iii) Lumping_schemes.f90: this is the subroutine that prepares and coordinates the application of different surrogate component selection methods (gridded as well as weighted $k$-means clustering). Near the end of this subroutine, the output to `.txt` files is processed, all of which end up in folder `Output_lumping` (see details on outputs below). 
 
-### Option 2: generating an executable via command terminal
+### Option 2: generating an executable via command terminal (example for Linux)
 - [Linux] (or via WSL on Windows): In principle, all that is necessary to run the 2D polarity—volatility program is an available exectuable file (.exe on Windows, .out on Linux). For convenience, we have included a makefile that enables generating such an executable in a straightforward manner. The only dependency is that you have a recent GNU Fortran (gfortran) compiler version installed (check in a terminal with `gfortran --version`). Our tests were conducted with gfortran v13.3.0, but any version after v11 should work. To use make and generate an executable do the following:
   - In a command terminal, navigate to the project's subfolder `2D_lumping_code`
   - This folder should contain a file `src_list.txt` and a file `makefile` (confirm with command `ls`). The former lists the relative paths of all the Fortran source files to be considered during the compilation. The makefile contains the instructions for compilation and linking as well as compiler flags (if needed, those could be modified by experienced users for debugging or other tests).
   - Enter command `make`
-  - gfortran will be used to compile all files and link them into an exectable named 
+  - gfortran will be used to compile all files and link them into an exectable named `2D_Pol_Vol.out`.
+  - To run the program with the configured settings file, enter command `./2D_Pol_Vol.out`
 
 -----
 ## Understanding the generated output
