@@ -5,7 +5,7 @@ The framework includes the Aerosol Inorganic–Organic Mixtures Functional group
 
 ----
 ## Contents
-Click on the <span><img src="./images_guide/outline_icon.jpg" alt="outline" style="width:3ex"/></span> icon at the top right to show the table of contents of this file with links to specific sections.
+Click on the <a><img src="./images_guide/outline_icon.jpg" alt="outline" style="width:3ex"/></a> icon at the top right to show the table of contents of this file with links to specific sections.
 
 ----
 
