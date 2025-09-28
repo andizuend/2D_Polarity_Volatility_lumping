@@ -1,5 +1,5 @@
-# 2D_Polarity_Volatility_lumping
-This repository provides code-level access to a 2D framework for lumping of gas and/or aerosol components into an adjustable set of surrogate components to represent a complex system of hundreds to tens of thousands of components. The 2D space and related lumping approaches are based on the predicted polarity and volatility of the system's molecules.
+# 2D Polarity—Volatility lumping framework
+This repository provides code-level access to a 2D framework for the characterization, visualization and lumping of gas and/or aerosol components into an adjustable set of surrogate components to represent a complex system of hundreds to tens of thousands of components. The 2D space and related lumping approaches are based on the predicted polarities and volatilities of the system's molecules.
 This 2D framework is described in detail in a related scientific modeling article by Amaladhasan et al. (*submitted*).
 The framework includes the Aerosol Inorganic–Organic Mixtures Functional groups Activity Coefficients ([AIOMFAC](https://aiomfac.lab.mcgill.ca "AIOMFAC")) model (core code) to enable the computation of activity coefficient ratios as one option for expressing the polarity of organic molecules. The surrogate selection methods include grid-based sampling of the 2D polarity–volatility space or the use of a *k*-means-based mass-weighted medoid clustering method. The latter is the recommended method when computationl cost is not a relevant factor; see the discussion in Amaladhasan et al. (*submitted*).  
 
