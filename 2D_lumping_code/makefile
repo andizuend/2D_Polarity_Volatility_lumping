@@ -31,4 +31,4 @@ $(program): $(objs)
 
 .phony: clean
 clean:
-	rm -f *.mod *.smod $(this_folder)/*.o $(this_folder)/Fortran_code/*.o $(this_folder)/Fortran_code/Fortran_OS_commands/*.o $(this_folder)/Fortran_code/FortranCode_Lumping_Schemes/*.o $(program)
+	rm -f *.mod *.smod $(this_folder)/*.o $(this_folder)/Fortran_code/*.o $(this_folder)/Fortran_code/Fortran_OS_commands/*.o $(this_folder)/Fortran_code/FortranCode_Lumping_Schemes/*.o
