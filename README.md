@@ -4,6 +4,10 @@ This 2D framework is described in detail in a related scientific modeling articl
 The framework includes the Aerosol Inorganic–Organic Mixtures Functional groups Activity Coefficients ([AIOMFAC](https://aiomfac.lab.mcgill.ca "AIOMFAC")) model (core code) to enable the computation of activity coefficient ratios as one option for expressing the polarity of organic molecules. The surrogate selection methods include grid-based sampling of the 2D polarity–volatility space or the use of a *k*-means-based mass-weighted medoid clustering method. The latter is the recommended method when computationl cost is not a relevant factor; see the discussion in Amaladhasan et al. (*submitted*).  
 
 ----
+## Contents
+Click on the <img src="./images_guide/outline_icon.jpg" alt="outline" style="width:10px"/> icon at the top right to show the table of contents of this file with links to specific sections.
+----
+
 ## Dependencies
 - `S2AS__SMILES_to_AIOMFAC` program: As part of the outputs from the framework, input files for the AIOMFAC(-web) model are generated for each surrogate system. This is done, in part, by calling the [S2AS__SMILES_to_AIOMFAC tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC). For this to work, your local 2D-lumping framework main folder needs to be located and accessible under the same parent directory as the 'S2AS__SMILES_to_AIOMFAC' main folder.
   
