@@ -5,7 +5,7 @@ The framework includes the Aerosol Inorganic–Organic Mixtures Functional group
 
 ----
 ## Dependencies
-- `SMILES_to_AIOMFAC_inp` program: As part of the outputs from the framework, input files for the AIOMFAC(-web) model are generated for each surrogate system. This is done, in part, by calling the [SMILES_to_AIOMFAC (S2AS) tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC). For this to work, your local 2D-lumping framework main folder needs to be located and accessible under the same parent directory as the 'SMILES_to_AIOMFAC_inp' tool folder.
+- `S2AS__SMILES_to_AIOMFAC` program: As part of the outputs from the framework, input files for the AIOMFAC(-web) model are generated for each surrogate system. This is done, in part, by calling the [S2AS__SMILES_to_AIOMFAC tool](https://github.com/andizuend/S2AS__SMILES_to_AIOMFAC). For this to work, your local 2D-lumping framework main folder needs to be located and accessible under the same parent directory as the 'S2AS__SMILES_to_AIOMFAC' main folder.
   
 - The `CustomizedPlots_Dislin` folder contains an additional Fortran program for the generation of plots using 2D framework output located in the folder `Output_lumping`. Such plots may require specific settings near the top of the `CustomizedPlotting` program .f90 file; e.g., for `lumpResChar`, `maxrows`, and the file range to be considered. Output from `CustomizedPlots_Dislin` will be located in its own `Output_Plots` subfolder.
   
