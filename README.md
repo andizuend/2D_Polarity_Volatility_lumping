@@ -69,7 +69,7 @@ There are ~13 settings (see the value column in the file) which should be checke
 -----
 ## Understanding the generated output
 > [!NOTE]
-> Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning programs (not included; see Amaladhasan et al. for examples).
+> Generally, after running the lumping framework program, you will find several sets of files in folder `Output_lumping`. The recommended mode is to automatically relable the output file (case) numbers to the 1260–1264 range, which is enabled in the `SETTINGS_2DLumping.txt` file by default. The reason for this relabeling is to generate a numbering sequence consistent with the input requirements of the AIOMFAC equilibrium gas–particle partitioning program (not included; see Amaladhasan et al. for examples).
 > When such relabeling is enabled, the 4-digit number part of the file names carry the following meaning:
   - 1260: full input system data (non-lumped reference case)
   - 1261: system of surrogates selected with the medoid method
@@ -77,7 +77,7 @@ There are ~13 settings (see the value column in the file) which should be checke
   - 1263: system of surrogates selected with the mass-weighted medoid method
   - 1264: system of surrogates selected with the $k$-means clustering method
 
-The listed  surrogate selection methods are described in detail elsewhere (Amaladhasan et al.).
+The listed surrogate selection methods are described in detail elsewhere (Amaladhasan et al.).
 
 For each case of lumping, there are two distinct sets of text files generated (these can be viewed with any decent text editor). The ones with the prefix "input_" refer to input files prepared for use in the AIOMFAC-based equilibrium partitioning model, with the following meanings (using 1261 as example case): 
   | File name  | Meaning   |
