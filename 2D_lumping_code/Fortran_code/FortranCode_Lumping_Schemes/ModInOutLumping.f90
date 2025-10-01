@@ -684,17 +684,17 @@ contains  !module subroutines...
     do n = 1,7
         select case(n)
         case(1)
-            pathTools = '../../SMILES_to_AIOMFAC/'     
+            pathTools = '../../S2AS__SMILES_to_AIOMFAC/'   
         case(2)
-            pathTools = '../../S2AS__SMILES_to_AIOMFAC/' 
-        case(3)
-            pathTools = '../../SMILES_to_AIOMFAC-main/'
-        case(4)
             pathTools = '../../S2AS__SMILES_to_AIOMFAC-main/'
+        case(3)
+            pathTools = '../../SMILES_to_AIOMFAC/'    
+        case(4)
+            pathTools = '../../SMILES_to_AIOMFAC-main/'
         case(5)
-            pathTools = '../../S2AS/'
-        case(6)
             pathTools = '../../SMILES_to_AIOMFAC_inp/'
+        case(6)
+            pathTools = '../../S2AS/'
         case default
             write(*,*) ''
             write(*,'(A,/)') "** ERROR from subroutine SMILES_to_AIOMFAC_inputFile **: failed finding the &
@@ -719,6 +719,7 @@ contains  !module subroutines...
     call copy_file(f1pathName, f2pathName)
     
     !(2) run the Python script for SMILES conversion to input file:
+    Estat = -1
     command = 'python '//trim(pathTools)//'SMILES_to_AIOMFAC_input.py '//trim(pathTools)//'InputFiles/'//trim(Smilesfname)
     if (isWindowsOS) then
         command2 = Replace_Text(command, "/", "\")                  !replace forward by backslashes for Windows commands
@@ -727,11 +728,19 @@ contains  !module subroutines...
     endif
     call execute_command_line(trim(command2), EXITSTAT=Estat, CMDSTAT=Cstat)
     
-    !(3) copy the produced output file ('input_XXXX.txt") back to the 2D-Lumping framework output folder:
-    write(*,*) '... copying the AIOMFAC input file to the local "Output_lumping" directory;'
-    f1pathName = trim(pathTools)//'OutputFiles/'//trim(outfilename)
-    f2pathName = trim(inpPath)//trim(outfilename)
-    call copy_file(f1pathName, f2pathName)
+    if (Estat /= 0 .or. Cstat /= 0) then
+        write(*,*) "Estat, Cstat", Estat, Cstat                     !for debugging
+        write(*,'(A,/)') '** ERROR from subroutine SMILES_to_AIOMFAC_inputFile **: An error occurred while trying to run &
+            &SMILES_to_AIOMFAC_input.py. Generating the AIOMFAC input file was unsuccessful. Please check your Python &
+            &environment and package dependencies (see also README instructions).'
+        read(*,*)
+    else !python script was executed successfully
+        !(3) copy the produced output file ('input_XXXX.txt") back to the 2D-Lumping framework output folder:
+        write(*,*) '... copying the AIOMFAC input file to the local "Output_lumping" directory;'
+        f1pathName = trim(pathTools)//'OutputFiles/'//trim(outfilename)
+        f2pathName = trim(inpPath)//trim(outfilename)
+        call copy_file(f1pathName, f2pathName)
+    endif
     
     end subroutine SMILES_to_AIOMFAC_inputFile
 !==================================================================================================================================
