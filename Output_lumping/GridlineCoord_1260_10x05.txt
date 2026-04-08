@@ -1,0 +1,11 @@
+Grid coordinates for the axis system used. Values may be log10 depending on choice of axis system.
+ 
+YaxisChoice = log10(act.coeff_ratio)
+ 
+#-x-Gridlines: 011
+#-y-Gridlines: 006
+ 
+x-grid line coordinates:
+  -6.491350E+00,  -5.846167E+00,  -5.200984E+00,  -4.555801E+00,  -3.910618E+00,  -3.265435E+00,  -2.620251E+00,  -1.975068E+00,  -1.329885E+00,  -6.847018E-01,  -3.951863E-02
+y-grid line coordinates:
+  -3.706483E+00,  -2.728538E+00,  -1.750593E+00,  -7.726488E-01,   2.052959E-01,   1.183240E+00
