@@ -365,7 +365,7 @@ do ns = 1,nschemes
                                    & meanOS_C, actcoeff_ratio, MolarMass, MassConcLumped)
     !output lumped and original (total) mass concentrations and molar amounts:
     filename = "LumpedConc_"//chfnum//'_'//trim(Lmethod)//'_'//trim(resol)//'.txt'
-    call OutputLumpedConcentrations(nn, norg1, filename, Lmethod, psatmethod, resol, MassConc, MassConcLumped, MolarMass) 
+    call OutputLumpedConcentrations(nn, norg1, TK, filename, Lmethod, psatmethod, resol, MassConc, MassConcLumped, MolarMass) 
     !special output file with additional data for k-means cluster populations:
     if (schemeID == 4) then
         filename = "KmeansClusters_"//chfnum//'_'//trim(resol)//'.txt'

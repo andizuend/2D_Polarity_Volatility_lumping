@@ -335,10 +335,10 @@ contains  !module subroutines...
     character(len=*),intent(in) :: filename, Lmethod, psatmethod, resol
     real(wp),dimension(:),intent(in) :: psat, OtoC, HtoC, meanOS_C, actcoeff_ratio, MolarMass, MassConc
     !local variables:
-    real(wp),parameter :: Rgas = 8.314462618_wp
+    real(wp),parameter :: Rgas = 8.314462618_wp             ![J/(K*mol)]  the universal gas constant according to definition by NIST
     character(len=1) :: kn
     character(len=4) :: Iformat
-    character(len=60) :: tformat
+    character(len=60) :: tformat, Tinfo
     character(len=300) :: title
     character(len=1000) :: fname
     integer :: i, k, unitx
@@ -350,13 +350,14 @@ contains  !module subroutines...
     else
         lumpedsyst = .true.
     endif
-    k = max(2, ceiling(log10(real(nn))) )       !determined size of integer format specifier
+    k = max(2, ceiling(log10(real(nn))) )                   !determined size of integer format specifier
     write(kn,'(I0)') k
     Iformat = trim('I'//kn//'.'//kn)
 
     fname = trim(fpathout)//trim(filename)
     open (NEWUNIT = unitx, FILE = fname, STATUS = "UNKNOWN")
-    title = "Lumping method ** "//trim(Lmethod)//" ** | Pure organic component properties | psat calculated by "//trim(psatmethod)//" method"
+    write(Tinfo,'(F6.2)') TKelvin
+    title = "Lumping method ** "//trim(Lmethod)//" ** | Pure organic component properties | psat calculated by "//trim(psatmethod)//" method at T = "//trim(Tinfo)//" K"
     write(unitx,'(A)') "==================================================================================================================="
     write(unitx,'(A)') adjustl(title)
     title = "YaxisChoice = "//trim(chyaxis)
@@ -390,18 +391,19 @@ contains  !module subroutines...
 
 
 !==================================================================================================================================
-    subroutine OutputLumpedConcentrations(nn, norg1, filename, Lmethod, psatmethod, resol, MassConcOrig, &
+    subroutine OutputLumpedConcentrations(nn, norg1, TKelvin, filename, Lmethod, psatmethod, resol, MassConcOrig, &
                                         & MassConcLumped, MolarMass)
     
     implicit none
     !interface variables:
     integer,intent(in) :: nn, norg1
+    real(wp),intent(in) :: TKelvin 
     character(len=*),intent(in) :: filename, Lmethod, psatmethod, resol
     real(wp),dimension(:),intent(in) :: MassConcOrig, MassConcLumped, MolarMass
     !local variables:
     character(len=1) :: kn
     character(len=4) :: Iformat
-    character(len=100) :: tformat
+    character(len=100) :: tformat, Tinfo
     character(len=1000) :: fname
     integer :: i, k, unitx
     logical :: lumpedsyst
@@ -418,8 +420,9 @@ contains  !module subroutines...
 
     fname = trim(fpathout)//trim(filename)
     open (NEWUNIT = unitx, FILE = fname, STATUS = "UNKNOWN")
+    write(Tinfo,'(F6.2)') TKelvin
     write(unitx,'(A)') "==================================================================================================================="
-    write(unitx,'(A)') "Lumping method ** "//trim(Lmethod)//" ** | Organic surrogate components total (gas + condensed) composition | psat calculated by "//trim(psatmethod)//" method"
+    write(unitx,'(A)') "Lumping method ** "//trim(Lmethod)//" ** | Organic surrogate components total (gas + condensed) composition | psat calculated by "//trim(psatmethod)//" method at T = "//trim(Tinfo)//" K"
     write(unitx,'(A)') 'YaxisChoice = '//trim(chyaxis)
     write(unitx,'(A)') "Grid resolution = "//trim(resol)
     write(unitx,'(A)') "==================================================================================================================="

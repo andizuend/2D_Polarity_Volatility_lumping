@@ -327,7 +327,7 @@ call OutputComponentProperties(nn, norg1, TKelvin, filename, Lmethod, psatmethod
                               & meanOS_C, actcoeff_ratio, MolarMass, TotalMassConc)  
 
 filename = "LumpedConc_"//outpnum//'_'//trim(Lmethod)//'.txt'
-call OutputLumpedConcentrations(nn, norg1, filename, Lmethod, psatmethod, resol, TotalMassConc, TotalMassConc, MolarMass)
+call OutputLumpedConcentrations(nn, norg1, TKelvin, filename, Lmethod, psatmethod, resol, TotalMassConc, TotalMassConc, MolarMass)
 
 filename = "input_"//outpnum//'_aw_inp.txt'
 call Output_aw_levels(filename, awlevels)
