@@ -9,7 +9,7 @@
 !*   Dept. Atmospheric and Oceanic Sciences, McGill University                          *
 !*                                                                                      *
 !*   -> created:        2012-06-08                                                      *
-!*   -> latest changes: 2025-07-06                                                      *
+!*   -> latest changes: 2026-04-07                                                      *
 !*                                                                                      *
 !****************************************************************************************
 program CustomizedPlotting_2D_framework
@@ -21,7 +21,7 @@ use ModCreateplot
 implicit none
 !...
 integer :: i, isymb, k, j, jcent, kset, nsets, icount, inrows, allocstat, info, icol, ny, nx, &
-    & clustN, clustN_adj, fileStartNo, fileEndNo, maxClust
+    & clustN, clustN_adj, fileStartNo, fileEndNo, maxClust, ndatplot
 integer,parameter :: NCinplot = 30
 integer,parameter :: maxinf = 50                                            !set maximum number of different input files (containing data for different curves...)
 integer,parameter :: maxrows = int(1E5)                                     !set maximum number of data rows per dataset
@@ -43,15 +43,17 @@ character(len=132),dimension(4) :: ptitle
 character(len=75),dimension(:),allocatable :: legendCompPropIn, legendLumpedConcIn
 character(len=75),dimension(:),allocatable :: legendCompProp, legendLumpedConc
 !...
-real(wp) :: axextend, SD, lylim, uylim, uxlim, lxlim, cthickn, colbarlowlim, colbaruplim, sumv
-real(wp),dimension(:),allocatable :: xv, yv, zv, wv, xvals, yvals, xgrid, ygrid, x2vals, y2vals
+real(wp),parameter :: Rgas = 8.314462618_wp                                 ![J/(K*mol)]  the universal gas constant according to definition by NIST https://physics.nist.gov/cgi-bin/cuu/Value?r
+real(wp) :: a, b, axextend, SD, lylim, uylim, uxlim, lxlim, cthickn, colbarlowlim, colbaruplim, &
+    & R_correlation, sumv, mean_Mmass, xmax, TKelvin
+real(wp),dimension(:),allocatable :: xv, yv, zv, wv, xvals, yvals, xgrid, ygrid, xgr, ygr, x2vals, y2vals
 real(wp),dimension(:,:),allocatable :: xyerror0
 real(wp),dimension(:,:,:),allocatable :: CompPropDataIn,LumpConcDataIn      !data files, structure: [data row | x1-value | y1-value | y2-value | y3-value |... ]
 real(wp),dimension(:,:,:),allocatable :: CompPropData, LumpConcData
 real(wp),dimension(:,:),allocatable :: clustCenter 
 !...
 logical :: dexists, isfullsyst, isKmeans, isSurr, yaxisIsLog, high_volat_surr_present, plot_high_volat_cluster
-logical,dimension(:),allocatable :: cPropDataExists                      !reports back whether the input files and read data exist
+logical,dimension(:),allocatable :: cPropDataExists                         !reports back whether the input files and read data exist
 !..................................
 
 
@@ -75,7 +77,7 @@ allocate( CompPropDataIn(maxrows,ndim,maxinf), LumpConcDataIn(maxrows,ndl,maxinf
     & legendCompPropIn(k), legendLumpedConcIn(k), krows(k), STAT=allocstat )
 !-----
 call ReadDataFiles(fileStartNo, lumpResChar, nsets, inrows, CompPropDataIn, LumpConcDataIn, xgrid, ygrid, &
-                    & legendCompPropIn, legendLumpedConcIn, cPropDataExists, filenumber, YaxisChoice, &
+                    & legendCompPropIn, legendLumpedConcIn, cPropDataExists, filenumber, YaxisChoice, TKelvin, &
                     & clustN, clustCenter, clustSurrogateIndx, clustPop, compCluster)
 !-----
 if (nsets > 0 .and. inrows > 0) then
@@ -90,7 +92,7 @@ if (.not. dexists) then
     read(*,*)
     stop !end the program
 else
-    allocate(cpv(inrows), xv(inrows), yv(inrows), zv(inrows), wv(inrows), xyerror0(inrows,4), xvals(inrows), yvals(inrows), &
+    allocate(cpv(inrows), xv(inrows), yv(inrows), zv(inrows), wv(inrows), xyerror0(4,inrows), xvals(inrows), yvals(inrows), &
         & CompPropData(inrows,ndim,nsets), LumpConcData(inrows,ndim-1,nsets), legendCompProp(k), legendLumpedConc(k), &
         & dcol(inrows), STAT=allocstat)
     CompPropData = 0.0_wp
@@ -150,18 +152,14 @@ else
     high_volat_surr_present = .false.
 endif
 
+allocate( xgr(size(xgrid)), ygr(size(ygrid)) )
+
+
 !!=========================================================================================================================
-!!= Plot of data from read input files
+!!=  plot molar masses or log(saturation conc.) against log(psat) to visualize and determine relationships
 !!=========================================================================================================================
-k = 0
-do kset = 1,2*nsets  !loop over all files / input data sets
-    !!=========================================================================================================================
-    !!= y-axis choice (e.g. activity coefficient ratio for each organic with water and hexanediol) vs. pure-component saturation pressure or concentration
-    !!=========================================================================================================================
-    k = k + 1
-    if (kset == nsets + 1) then !reset k
-        k = 1
-    endif
+do kset = 1,2
+    k = 1
     if (cPropDataExists(k)) then
         !initial plot values:
         newplot = .true.
@@ -187,6 +185,248 @@ do kset = 1,2*nsets  !loop over all files / input data sets
         logxaxis = .false.
         legplot = .true.
         nogridlines = .false.
+        metaff = "pdf"
+        ptitle = ""
+        cthickn = 3.0_wp !6.0_wp
+        !!DefinePlotData(xvals, yvals, xyerror(the +- error bar size for x and y axis [dimensions 1:4 are x-err neg, x-err pos, y-err neg, y-err pos]), waxis(y-axis 1 or 2?), 
+        !               color, ltype(1=only line, 2=symb and line, > 2 means symbols and no line), symbtype(-1=no symbol), lstyle(1=solid, 2=dashm, 3=dash, 4=Mydot, 5=dot, 6=dash-dotted),legtxt,cthickn)
+        dcol = 0
+        xv = 0.0_wp
+        yv = 0.0_wp
+        wv = 0.0_wp
+        zv = 0.0_wp
+        cpv = 0
+        
+        !determine whether this is the full system or a lumped version:
+        isfullsyst = .false.
+        if (index(legendLumpedConc(k), "_FullSystem") > 0) then         !true if not lumped
+            isfullsyst = .true.
+        endif
+        
+        !set x,y,z values:
+        logxaxis = .true.
+        xv(1:krows(k)) = CompPropData(1:krows(k),5,k)                   !psat [Pa]
+        wv(1:krows(k)) = LumpConcData(1:krows(k),2,k)                   !the component mass conc. (after potential lumping)
+        cpv(1:krows(k)) = int(CompPropData(1:krows(k),1,k))             !store component number as sorting will be applied later
+        select case(kset)
+        case(1)
+            logyaxis = .false.
+            yv(1:krows(k)) = 1.0E3_wp*CompPropData(1:krows(k),7,k)      !molar mass initially in [kg/mol] converted to [g/mol]
+            yaxchar = "Mmass"
+            lylabel = "Molar mass, $M_j$ / [${\rm g}\;{\rm mol}^{-1}$]"
+            sumv = sum(wv(1:krows(k)))
+            mean_Mmass = sum( (wv(1:krows(k)) / sumv)*yv(1:krows(k)) )  !mass-weighted mean molar mass of the system's components for later use with C^o axis
+        case(2)
+            logyaxis = .true.
+            yv(1:krows(k)) = CompPropData(1:krows(k),8,k)               !C^o_j [ug/m^3]; pure-component saturation vapour concentration
+            yaxchar = "LgCsat"
+            lylabel = "$C_j^{\rm o}$ / [$\mu {\rm g}\;{\rm m}^{-3}$]"
+        end select
+    
+        !select colour axis quantity:
+        call SetCustomColPalette('BlackPurpleRedYellow')                !set a custom colour palette for these plots
+        colchar = "Log10MassConc"                                       !"TotMassConc"
+        sumv = sum(LumpConcData(1:krows(k),2,k))
+        colbaruplim = real(floor(log10(0.9_wp*sumv)), kind=wp)
+        colbarlowlim = colbaruplim - 6.0_wp                             !for log-scaling, based on upper limit; 0.0_wp
+        where(LumpConcData(1:krows(k),2,k) > 0.0_wp)
+            zv(1:krows(k)) = log10( LumpConcData(1:krows(k),2,k) )
+        elsewhere
+            zv(1:krows(k)) = colbarlowlim - 1.0_wp                      !make lower than colbarlowlim so it won't be plotted
+        endwhere
+    
+        !--- sorting of the plot data arrays such that mass conc. as the sorting condition is increasing with increasing array index:
+        if (key(1,k) < 0) then
+            key(1:krows(k),k) = [(i, i = 1,krows(k))]                               !the original array index positions before sorting;
+            call dlasrt2('I', krows(k), wv(1:krows(k)), key(1:krows(k),k), info)    !use sorting sub with sort order output in key array;
+        else
+            wv(1:krows(k)) = wv(key(1:krows(k),k))     
+        endif
+        !now use the key to sort all the associated arrays:
+        xv(1:krows(k)) = xv( key(1:krows(k),k) ) 
+        yv(1:krows(k)) = yv( key(1:krows(k),k) )
+        zv(1:krows(k)) = zv( key(1:krows(k),k) )
+        cpv(1:krows(k)) = cpv( key(1:krows(k),k) ) 
+        !--- end of sorting
+        
+        yaxisIsLog = logyaxis
+        icount = 0
+        ndatplot = count(wv(1:krows(k)) > 0.0_wp)
+        xvals = 0.0_wp
+        yvals = 0.0_wp
+        do i = 1,krows(k)                                                   !loop over data rows (component points)
+            if (wv(i) > 0.0_wp) then                                        !plot only points of non-zero mass concentration:
+                logyaxis = yaxisIsLog
+                icount = icount + 1
+                xvals(1) = xv(i)
+                yvals(1) = yv(i)
+                !only max. max_legd_lin legend entries are shown (here show last max_legd_lin - 2 entries):
+                if (icount == ndatplot - (max_legd_lin - 3) .and. ndatplot > (max_legd_lin - 2)) then   
+                    legtxt = "plus other points (not shown)"
+                else if (icount <= ndatplot - (max_legd_lin - 2) .and. ndatplot > (max_legd_lin - 2)) then
+                    legtxt = ""
+                else
+                    write(legtxt, '(I0)') cpv(i)                            !transfer component number
+                    write(ichar, '(ES10.3)') zv(i)                          !transfer z-axis value
+                    legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
+                endif
+                !point colors:
+                call defzcolval(zv(i), dcol(i), colbarlowlim, colbaruplim)  !map the z value to the colour bar index number dcol
+                !--
+                call DefinePlotData(xvals(1:1), yvals(1:1), xyerror0(1:4,1:1), 1, dcol(i), 3, 21, 5, legtxt, cthickn)
+                !--
+                lxlim = min( lxlim, xv(i) )
+                uxlim = max( uxlim, xv(i) )
+                lylim = min( lylim, yv(i) )
+                uylim = max( uylim, yv(i) )
+            endif
+        enddo !i
+        
+        !generate a linear fit of molar mass vs log10(psat):
+        if (kset == 1) then
+            xvals = 0.0_wp
+            yvals = 0.0_wp
+            icount = 0
+            do i = 1,krows(k)
+                if (wv(i) > 0.0_wp) then
+                    icount = icount + 1
+                    xvals(icount) = log10(xv(i))
+                    yvals(icount) = yv(i)
+                endif
+            enddo
+            call LINFIT(xvals(1:icount), yvals(1:icount), icount, a, b, R_correlation, 'none')      !use a Dislin routine; Y = A * X + B.
+            !write(*,'(A)') 'fitted linear relationship between molar mass and log10(p_sat):'
+            !write(legtxt,'(A)') '$M_j / {\rm [g/mol]} = a*{\rm log}_{10}(p^{\rm o}_j/{\rm [Pa]}) + b$'
+            !write(*,'(*(A,F7.3))') trim(legtxt)//'; a = ', a, ', b = ', b, ', correlation R = ', R_correlation
+            !write(*,*)
+            !add the regression line to the plot:
+            legtxt = 'linear fit'
+            xmax  = maxval(xvals(1:icount))
+            xvals(1) = minval(xvals(1:icount))
+            xvals(2) = xmax
+            yvals(1:2) = a*xvals(1:2) + b
+            !....
+            logyaxis = yaxisIsLog
+            cthickn = 6.0_wp
+            call DefinePlotData((10.0_wp**xvals(1:2)), yvals(1:2), xyerror0(1:4,1:1), 1, -55, 1, -1, 3, legtxt, cthickn)       !plot a grey dashed line
+            !....
+        endif
+
+        ! °°now plot with following parameters °°
+        xaxchar = "LgPsat"
+        fileoutname = trim(yaxchar)//"_vs_"//trim(xaxchar)//"_"//trim(filenumber(k))//"_res"//trim(lumpResChar)//"_col"//trim(colchar)
+        ptitle(1) = trim(fileoutname)
+        select case(kset)
+        case(1)
+            ptitle(2) = "Molar mass vs. pure-component saturation vapor pressure"
+            messagebox = .true.
+            write(legtxt,'(I0)') int(mean_Mmass)
+            legtxt = trim(legtxt)//" ${\rm g}\;{\rm mol}^{-1}$"
+            call SetTextlines("mass-weighted mean molar mass:")
+            call SetTextlines(trim(legtxt))
+            call SetTextlines("linear fit: $M_j / {\rm [g/mol]} = a*{\rm log}_{10}(p^{\rm o}_j/{\rm [Pa]}) + b$")
+            write(legtxt,'(*(A,F7.3))') '$a =$ ', a,', $b =$ ', b
+            call SetTextlines(trim(legtxt))
+            write(legtxt,'(A,F7.3)') 'correlation R = ', R_correlation
+            call SetTextlines(trim(legtxt))
+        case(2)
+            ptitle(2) = "pure-component saturation vapour conc. vs. saturation vapor pressure"
+        end select
+        if (high_volat_surr_present) then
+            write(cchar,'(I0.2)') krows(k) - 1
+            ptitle(3) = "Input file and method: "//trim(legendCompProp(k))//",  "//"no. of surrogates: "//trim(cchar)//" (+1 high-volat.)"
+        else
+            write(cchar,'(I0.2)') krows(k)
+            ptitle(3) = "Input file and method: "//trim(legendCompProp(k))//",  "//"no. of surrogates: "//trim(cchar)
+        endif
+        !lylabel is now set above in the select case block;
+        xlabel = "$p^{\rm o,sat}_j$ / [Pa]"  !or ? "$C^{\rm o}$ / $[\mu {\rm g}/{\rm m}^3$]"
+        rylabel = ""
+        zlabel = "log$_{\rm 10}$(mass conc. / [$\mu {\rm g}\;{\rm m}^{-3}$])"
+        SD = 0.0_wp
+        squareplot = .false.
+        smallsymbs = .true.
+        fixminxax = .false.
+        nogridlines = .true.                !to suppress plotting of background gridlines when already the lumping grid is plotted
+        call showzcolbar(colbarlowlim, colbaruplim, zlabel, .false.)   !to set z-axis colour bar properties and show colour bar on plot
+        specialxrange = .true.  
+        specialyrange = .true.
+        lowerxlimit = 10.0_wp**floor(log10(lxlim - 0.05_wp*lxlim))
+        if (lxlim - 0.05_wp*lxlim > 4.0_wp*lowerxlimit) then
+            lowerxlimit = lowerxlimit*3.0_wp
+        endif
+        upperxlimit = 10.0_wp**ceiling(log10(uxlim + 0.05_wp*uxlim))
+        if (uxlim + 0.05_wp*uxlim < 0.3_wp*upperxlimit) then
+            upperxlimit = 0.4_wp*upperxlimit  
+        endif
+        if (yaxisIsLog) then
+            lowerylimit = 10.0_wp**floor(log10(lylim - 0.05_wp*lylim))
+            if (lylim > 4.0_wp*lowerylimit) then
+                lowerylimit = lowerylimit*3.0_wp
+            endif
+            upperylimit = 10.0_wp**ceiling(log10(uylim + 0.05_wp*uylim))
+            if (uylim < 0.3_wp*upperylimit) then
+                upperylimit = 0.4_wp*upperylimit  
+            endif
+        else
+            axextend = max(abs(0.05_wp*lylim), abs(0.05_wp*uylim))
+            lowerylimit = lylim -axextend
+            upperylimit = uylim +axextend
+        endif
+        !---
+        if (xaxchar == "LgPsat") then
+            !also enable the plotting of a secondary (upper) x-axis showing log10(C^o) values instead:
+            is_secondary_xaxis = .true.
+            !use a conversion formula to compute the limiting values on this second x-axis based on the
+            !log10(C^o) relationship with log10(p^o) using ideal gas law and linear molar mass relationship
+            !computed above: Mmass / [g/mol] = a*log10(p^o/[Pa]) + b
+            yvals(1:2) = a*log10([lowerxlimit, upperxlimit]) + b                    ![g/mol] Mmass at the lower and upper x limits
+            lowerxlimit2 = 1.0E6_wp*lowerxlimit*yvals(1) / (Rgas*TKelvin)           ![ug/m^3] C^o at lower limit
+            upperxlimit2 = 1.0E6_wp*upperxlimit*yvals(2) / (Rgas*TKelvin)
+            second_xaxis_label = "$C_j^{\rm o}$ / [$\mu {\rm g}\;{\rm m}^{-3}$]"
+        endif
+        !---
+        call PlotNow(ptitle, xlabel, lylabel, rylabel, fileoutname, SD)
+    endif    
+enddo !kset
+!========================================================================================================================
+
+
+!!=========================================================================================================================
+!!=  y-axis choice (e.g. activity coefficient ratio for each organic with water and hexanediol) 
+!!=  vs. pure-component saturation pressure or concentration
+!!=========================================================================================================================
+k = 0
+do kset = 1,2*nsets  !loop over all files / input data sets
+    k = k + 1
+    if (kset == nsets + 1) then !reset k
+        k = 1
+    endif
+    if (cPropDataExists(k)) then
+        !initial plot values:
+        newplot = .true.
+        newplot2 = .true.
+        messagebox = .false.
+        messboxpos_x = 0
+        messboxpos_y = 0
+        uxlim = -1.0E80_wp
+        lxlim = 1.0E80_wp
+        uylim = -1.0E80_wp
+        lylim = 1.0E80_wp
+        specialxrange = .false.
+        specialyrange = .false.
+        bargylimits = .false.
+        logxaxis = .false.
+        plotbarborder = .false.
+        max_y = 1.0E15_wp
+        min_y = 0.0_wp
+        smallsymbs = .false.
+        bigsymbs = .false.
+        call SetCustomColPalette('Viridis')     !load custom-made colour palette in Mod_createplot
+        logyaxis = .false.
+        logxaxis = .false.
+        legplot = .true.
+        nogridlines = .false.
         metaff = "pdf"  !wmf  pdf  eps  png  gif
         ptitle = ""
         cthickn = 3.0_wp !6.0_wp
@@ -198,6 +438,7 @@ do kset = 1,2*nsets  !loop over all files / input data sets
         wv = 0.0_wp
         zv = 0.0_wp
         cpv = 0
+        
         !determine whether this is the full system or a lumped version:
         isfullsyst = .false.
         isKmeans = .false.
@@ -206,7 +447,8 @@ do kset = 1,2*nsets  !loop over all files / input data sets
         else if (index(legendLumpedConc(k), "_Kmeans") > 0) then
             isKmeans = .true.
         endif
-        !set x-y values:
+        
+        !set x,y,z values:
         logxaxis = .true.
         xv(1:krows(k)) = CompPropData(1:krows(k),5,k)           !psat [Pa]
         wv(1:krows(k)) = LumpConcData(1:krows(k),2,k)           !the component mass conc. (after potential lumping)
@@ -233,6 +475,7 @@ do kset = 1,2*nsets  !loop over all files / input data sets
             yaxchar = "MeanOSC"
             lylabel = "$\overline{\rm OS}_{\rm C}$"
         end select
+        
         !select colour axis quantity:
         if (kset <= nsets) then
             call SetCustomColPalette('Viridis')
@@ -242,8 +485,7 @@ do kset = 1,2*nsets  !loop over all files / input data sets
             colbarlowlim = 0.0_wp
         else
             call SetCustomColPalette('BlackPurpleRedYellow')    !set a custom colour palette for these plots
-            !call SetCustomColPalette('BluePurpleOrangeYellow')
-            colchar = "Log10TotMassConc"                        !"TotMassConc"
+            colchar = "Log10MassConc"
             sumv = sum(LumpConcData(1:krows(k),2,k))
             colbaruplim = real(floor(log10(0.9_wp*sumv)), kind=wp)
             colbarlowlim = colbaruplim - 6.0_wp                  !for log-scaling, based on upper limit; 0.0_wp
@@ -253,6 +495,7 @@ do kset = 1,2*nsets  !loop over all files / input data sets
                 zv(1:krows(k)) = colbarlowlim - 1.0_wp           !make lower than colbarlowlim so it won't be plotted
             endwhere
         endif
+        
         !--- sorting of the plot data arrays such that mass conc. as the sorting condition is increasing with increasing array index:
         if (key(1,k) < 0) then
             key(1:krows(k),k) = [(i, i = 1,krows(k))]                               !the original array index positions before sorting;
@@ -266,8 +509,10 @@ do kset = 1,2*nsets  !loop over all files / input data sets
         zv(1:krows(k)) = zv( key(1:krows(k),k) )
         cpv(1:krows(k)) = cpv( key(1:krows(k),k) ) 
         !--- end of sorting
+        
         yaxisIsLog = logyaxis
         icount = 0
+        ndatplot = count(wv(1:krows(k)) > 0.0_wp)
         xvals = 0.0_wp
         yvals = 0.0_wp
         do i = 1,krows(k)     !loop over data rows (component points)
@@ -276,21 +521,19 @@ do kset = 1,2*nsets  !loop over all files / input data sets
                 icount = icount + 1
                 xvals(1) = xv(i)
                 yvals(1) = yv(i)            
-                write(legtxt, '(I0)') cpv(i)    !transfer component number
-                write(ichar, '(ES10.3)') zv(i)  !transfer z-axis value
-                legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
-                if (icount == 28) then          !only max. 30 legend entries are shown
-                    legtxt = "plus additional points ..."
-                else if (icount > 28) then
+                if (icount == ndatplot - (max_legd_lin - 3) .and. ndatplot > (max_legd_lin - 2)) then   !only max. max_legd_lin legend entries are shown (here show max. last max_legd_lin -2)
+                    legtxt = "plus other points (not shown)"
+                else if (icount <= ndatplot - (max_legd_lin - 2) .and. ndatplot > (max_legd_lin - 2)) then
                     legtxt = ""
+                else
+                    write(legtxt, '(I0)') cpv(i)    !transfer component number
+                    write(ichar, '(ES10.3)') zv(i)  !transfer z-axis value
+                    legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
                 endif
-                !if (krows(k) < 1000) then
-                !    bigDsymbs = .true.
-                !endif
                 !point colors:
                 call defzcolval(zv(i), dcol(i), colbarlowlim, colbaruplim)  !map the z value to the colour bar index number dcol
                 !--
-                call DefinePlotData(xvals, yvals, xyerror0, 1, dcol(i), 3, 21, 5, legtxt, cthickn)
+                call DefinePlotData(xvals(1:1), yvals(1:1), xyerror0(1:4,1:1), 1, dcol(i), 3, 21, 5, legtxt, cthickn)
                 !--
                 lxlim = min( lxlim, xv(i) )
                 uxlim = max( uxlim, xv(i) )
@@ -308,14 +551,18 @@ do kset = 1,2*nsets  !loop over all files / input data sets
             !consider grid line data conversion:
             if (kset == 1) then
                 if (logxaxis) then
-                    xgrid = 10.0_wp**xgrid
+                    xgr = 10.0_wp**xgrid
+                else
+                    xgr = xgrid
                 endif
                 if (yaxisIsLog) then
-                    ygrid = 10.0_wp**ygrid
+                    ygr = 10.0_wp**ygrid
+                else
+                    ygr = ygrid
                 endif
             endif
-            nx = size(xgrid)
-            ny = size(ygrid)
+            nx = size(xgr)
+            ny = size(ygr)
             !plot x-axis grid lines:
             do j = 1,nx
                 if (j == 1) then
@@ -323,9 +570,9 @@ do kset = 1,2*nsets  !loop over all files / input data sets
                 else
                     legtxt = ""
                 endif
-                xv(1:2) = xgrid(j)
-                yv(1) = ygrid(1)
-                yv(2) = ygrid(ny)
+                xv(1:2) = xgr(j)
+                yv(1) = ygr(1)
+                yv(2) = ygr(ny)
                 call DefinePlotData(xv(1:2), yv(1:2), xyerror0, 1, icol, 1, -1, 5, legtxt, cthickn)
             enddo
             !plot y-axis grid lines:
@@ -335,15 +582,15 @@ do kset = 1,2*nsets  !loop over all files / input data sets
                 else
                     legtxt = ""
                 endif
-                xv(1) = xgrid(1)    !start x value
-                xv(2) = xgrid(nx)   !end x value
-                yv(1:2) = ygrid(j)  !current y-axis grid line value
+                xv(1) = xgr(1)    !start x value
+                xv(2) = xgr(nx)   !end x value
+                yv(1:2) = ygr(j)  !current y-axis grid line value
                 call DefinePlotData(xv(1:2), yv(1:2), xyerror0, 1, icol, 1, -1, 5, legtxt, cthickn)
             enddo
-            lxlim = min( lxlim, min(xgrid(1), xgrid(nx)) )
-            uxlim = max( uxlim, max(xgrid(1), xgrid(nx)) )
-            lylim = min( lylim, min(ygrid(1), ygrid(ny)) )
-            uylim = max( uylim, max(ygrid(1), ygrid(ny)) )
+            lxlim = min( lxlim, min(xgr(1), xgr(nx)) )
+            uxlim = max( uxlim, max(xgr(1), xgr(nx)) )
+            lylim = min( lylim, min(ygr(1), ygr(ny)) )
+            uylim = max( uylim, max(ygr(1), ygr(ny)) )
         endif
         
         ! °°now plot with following parameters °°
@@ -376,7 +623,7 @@ do kset = 1,2*nsets  !loop over all files / input data sets
             zlabel = "O:C ratio"
         else if (trim(colchar) == "TotMassConc") then
             zlabel = "mass conc. / [$\mu {\rm g}\;{\rm m}^{-3}$]"
-        else if (trim(colchar) == "Log10TotMassConc") then
+        else if (trim(colchar) == "Log10MassConc") then
             zlabel = "log$_{\rm 10}$(mass conc. / [$\mu {\rm g}\;{\rm m}^{-3}$])"
         else
             zlabel = " !! undefined !!"
@@ -420,17 +667,31 @@ do kset = 1,2*nsets  !loop over all files / input data sets
                 upperylimit = uylim +axextend
             endif
         endif
+        !---
+        if (xaxchar == "LgPsat") then
+            !also enable the plotting of a secondary (upper) x-axis showing log10(C^o) values instead:
+            is_secondary_xaxis = .true.
+            !use a conversion formula to compute the limiting values on this second x-axis based on the 
+            !log10(C^o) relationship with log10(p^o) using ideal gas law and linear molar mass relationship 
+            !computed above: Mmass / [g/mol] = a*log10(p^o/[Pa]) + b
+            yvals(1:2) = a*log10([lowerxlimit, upperxlimit]) + b                ![g/mol] Mmass at the lower and upper x limits
+            lowerxlimit2 = 1.0E6_wp*lowerxlimit*yvals(1)/(Rgas*TKelvin)         ![ug/m^3] C^o at lower limit                  
+            upperxlimit2 = 1.0E6_wp*upperxlimit*yvals(2)/(Rgas*TKelvin)
+            second_xaxis_label = "$C_j^{\rm o}$ / [$\mu {\rm g}\;{\rm m}^{-3}$]"
+        endif
+        !---
         call PlotNow(ptitle, xlabel, lylabel, rylabel, fileoutname, SD)
     endif    
-    !========================================================================================================================
 enddo !kset
-
 !========================================================================================================================
+
+
+
+!!=========================================================================================================================
+!!=   plot cluster members and centers for k-means data
+!!=========================================================================================================================
 do k = 1,nsets
     if (index(legendLumpedConc(k), "_FullSystem") > 0 .and. any(index(legendLumpedConc(:), "_Kmeans") > 0) ) then
-        !!=========================================================================================================================
-        !!= Plot cluster members and centers for k-means data
-        !!=========================================================================================================================
         if (cPropDataExists(k)) then
             !!DefinePlotData(xvals, yvals, xyerror(the +- error bar size for x and y axis [dimensions 1:4 are x-err neg, x-err pos, y-err neg, y-err pos]), waxis(y-axis 1 or 2?),
             !               color, ltype(1=only line, 2=symb and line, > 2 means symbols and no line), symbtype(-1=no symbol), lstyle(1=solid, 2=dashm, 3=dash, 4=Mydot, 5=dot, 6=dash-dotted),legtxt,cthickn)
@@ -473,14 +734,15 @@ do k = 1,nsets
                 yaxchar = "MeanOSC"
                 lylabel = "$\overline{\rm OS}_{\rm C}$"
             end select
+            
             !select colour axis quantity:
             call SetCustomColPalette('BlueGreenWhiteOrangePurple')  !divergent colour palette	
-            !call SetCustomColPalette('BluePurpleOrangeYellow')     !set a custom colour palette for these plots
             colchar = "KmeansClusterID"
             colbaruplim = clustN
             colbarlowlim = 0.0_wp
             iz(1:krows(k)) = compCluster(:)                         !here the cluster no. to which a component belongs;
             maxClust = maxval(compCluster(:))
+            
             !now use the key to sort all the associated arrays:
             xv(1:krows(k)) = xv( key(1:krows(k),k) )
             yv(1:krows(k)) = yv( key(1:krows(k),k) )
@@ -488,21 +750,20 @@ do k = 1,nsets
             iz(1:krows(k)) = iz( key(1:krows(k),k) )
             cpv(1:krows(k)) = cpv( key(1:krows(k),k) )
             !--- end of sorting
+            
+            ndatplot = count(wv(1:krows(k)) > 0.0_wp)
             jcent = 0
             icount = 0
             logxaxis = .true.
-            do i = 1,krows(k)                               !loop over data rows (component points)
-                if (wv(i) > 0.0_wp) then                     !plot only points of non-zero mass concentration:
+            do i = 1,krows(k)                                       !loop over data rows (component points)
+                if (wv(i) > 0.0_wp) then                            !plot only points of non-zero mass concentration:
                     logyaxis = yaxisIsLog
                     xvals(1) = xv(i)
                     yvals(1) = yv(i)
-                    write(legtxt, '(I0)') cpv(i)            !transfer component number
-                    write(ichar, '(I0.2)') iz(i)            !transfer z-axis value
-                    legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
                     if (cpv(i) == clustSurrogateIndx(iz(i)) ) then  !detected surrogate component of a cluster
                         jcent = jcent + 1
                         isSurr = .true.
-                        x2vals(jcent) = xv(i)               !store cluster surrogate component properties for plotting later
+                        x2vals(jcent) = xv(i)                       !store cluster surrogate component properties for plotting later
                         y2vals(jcent) = yv(i)
                         ia(jcent) = iz(i)
                         c2pv(jcent) = cpv(i)
@@ -511,55 +772,62 @@ do k = 1,nsets
                         isymb = 21
                         isSurr = .false.
                     endif
-                    if (icount == 28) then                  !only max. 30 legend entries are shown
-                        legtxt = "plus additional points ..."
-                    else if (icount > 28) then
-                        legtxt = ""
+                    if (icount == ndatplot - (max_legd_lin - 3) .and. ndatplot > (max_legd_lin - 2)) then   !only max. max_legd_lin legend entries are shown (here show max. last max_legd_lin - 2)
+                        legtxt = "plus other points (not shown)"
+                    else if (icount <= ndatplot - (max_legd_lin - 2) .and. ndatplot > (max_legd_lin - 2)) then
+                        legtxt = ""                                     !==> skip legend entry
+                    else
+                        write(legtxt, '(I0)') cpv(i)                    !transfer component number
+                        write(ichar, '(I0.2)') iz(i)                    !transfer z-axis value
+                        legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
                     endif
-                    !if (krows(k) < 1000) then
-                    !    bigDsymbs = .true.
-                    !endif
                     cthickn = 3.0_wp
                     if (.not. isSurr) then
                         if (high_volat_surr_present .and. (.not. plot_high_volat_cluster) .and. iz(i) == maxClust) then
-                            cycle                           !don't plot this point and continue
+                            cycle                                   !don't plot this point and continue
                         else
-                            call defzcolval(real(iz(i),kind=wp), dcol(i), colbarlowlim, colbaruplim)     !map the O:C value to the colour bar index number dcol
-                            if (iz(i) == maxClust) dcol(i) = -21    !for the highly-volatile species cluster use a special WinXP color value
-                            call DefinePlotData(xvals, yvals, xyerror0, 1, dcol(i), 3, isymb, 1, legtxt, cthickn)
+                            call defzcolval(real(iz(i),kind=wp), dcol(i), colbarlowlim, colbaruplim)
+                            if (iz(i) == maxClust) dcol(i) = -21    !for the highly-volatile species cluster use a special WinXP color value (negative value picks color from that palette)
+                            call DefinePlotData(xvals(1:1), yvals(1:1), xyerror0(1:4,1:1), 1, dcol(i), 3, isymb, 1, legtxt, cthickn)
                         endif
                     endif
                 endif
             enddo !i
+            
             !now loop over all cluster surrogate components and plot them after the other points, so they are on top and remain visible:
             xvals = 0.0_wp
             yvals = 0.0_wp
-            do i = 1,clustN
+            do i = 1,jcent
                 logyaxis = yaxisIsLog
-                icount = icount+1
+                icount = icount + 1
                 xvals(1) = x2vals(i)
                 yvals(1) = y2vals(i)
-                write(legtxt, '(I0)') c2pv(i)           !transfer component number
-                write(ichar, '(I0.2)') ia(i)            !transfer z-axis value
-                legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
-                isymb = 19                              !filled diamond symbol
-                if (icount > 27) then
+                isymb = 19   
+                if (icount == ndatplot - (max_legd_lin - 3) .and. ndatplot > (max_legd_lin - 2)) then
+                    legtxt = "plus other points (not shown)"
+                else if (icount <= ndatplot - (max_legd_lin - 2) .and. ndatplot > (max_legd_lin - 2)) then
                     legtxt = ""
+                else
+                    write(legtxt, '(I0)') c2pv(i)                       !transfer component number
+                    write(ichar, '(I0.2)') ia(i)                        !transfer z-axis value
+                    legtxt = "cp"//trim(legtxt)//", "//trim(colchar)//" = "//trim(ichar)
                 endif
                 bigDsymbs = .true.
                 cthickn = 3.0_wp
                 if (high_volat_surr_present .and. (.not. plot_high_volat_cluster) .and. ia(i) == maxClust) then
-                    cycle                               !don't plot this point and continue
+                    cycle                                           !don't plot this point and continue
                 else
                     call defzcolval(real(ia(i),kind=wp), dcol(i), colbarlowlim, colbaruplim)
-                    if (ia(i) == maxClust) dcol(i) = -21    !for the highly-volatile species cluster use a special WinXP color value
+                    if (ia(i) == maxClust) dcol(i) = -21            !for the highly-volatile species cluster use a special WinXP color value
                     call DefinePlotData(xvals, yvals, xyerror0, 1, dcol(i), 3, isymb, 1, legtxt, cthickn)
                     !define a second symbol of the same point with the symbol outline in black:
-                    isymb = 5                           !open diamond symbol
+                    isymb = 5                                       !open diamond symbol
                     bigDsymbs = .true.
-                    call DefinePlotData(xvals, yvals, xyerror0, 1, 0, 3, isymb, 1, legtxt, cthickn)
+                    legtxt = ""                                     !don't plot this symbol in legend
+                    call DefinePlotData(xvals(1:1), yvals(1:1), xyerror0(1:4,1:1), 1, -80, 3, isymb, 1, legtxt, cthickn)
                 endif	
             enddo
+            
             !---
             !add actual k-means cluster center points:
             if (high_volat_surr_present .and. (.not. plot_high_volat_cluster)) then
@@ -571,9 +839,6 @@ do k = 1,nsets
             yvals = 0.0_wp
             icount = icount + 1
             legtxt = "exact cluster centers"
-            if (icount > 28) then
-                legtxt = ""
-            endif
             if (logxaxis) then
                 xvals(1:clustN_adj) = 10.0_wp**clustCenter(1,1:clustN_adj)
             else
@@ -586,7 +851,7 @@ do k = 1,nsets
             endif
             cthickn = 3.0_wp
 			isymb = 4                   !X symbol
-            call DefinePlotData(xvals, yvals, xyerror0, 1, 0, 3, isymb, 1, legtxt, cthickn)
+            call DefinePlotData(xvals(1:clustN_adj), yvals(1:clustN_adj), xyerror0(1:4,1:clustN_adj), 1, 0, 3, isymb, 1, legtxt, cthickn)
             !---
             
             ! °°now plot with following parameters °°
@@ -601,6 +866,7 @@ do k = 1,nsets
                 write(cchar,'(I0.2)') clustN
                 ptitle(3) = "Method: "//trim(legendCompProp(k))//", "//"# clusters = "//trim(cchar)//"; $\times$ = cluster center; 'diamond' = surrogate comp."
             endif
+            
             !set above; lylabel = "$ \gamma_{j,{\rm hex}}/ \gamma_{j,{\rm H_2O}} $"
             xlabel = "$p^{\rm o,sat}_j$ / [Pa]"  !or ? "$C^{\rm o}$ / $[\mu {\rm g}/{\rm m}^3$]"
             rylabel = ""
@@ -614,20 +880,35 @@ do k = 1,nsets
             call showzcolbar(colbarlowlim, colbaruplim, zlabel, .true.)   !to set z-axis colour bar properties and show colour bar on plot
             specialxrange = .true.
             specialyrange = .true.
+            !---
+            if (xaxchar == "LgPsat") then
+                !also enable the plotting of a secondary (upper) x-axis showing log10(C^o) values instead:
+                is_secondary_xaxis = .true.
+                !use a conversion formula to compute the limiting values on this second x-axis based on the 
+                !log10(C^o) relationship with log10(p^o) using ideal gas law and linear molar mass relationship 
+                !computed above: Mmass / [g/mol] = a*log10(p^o/[Pa]) + b
+                yvals(1:2) = a*log10([lowerxlimit, upperxlimit]) + b                ![g/mol] Mmass at the lower and upper x limits
+                lowerxlimit2 = 1.0E6_wp*lowerxlimit*yvals(1)/(Rgas*TKelvin)         ![ug/m^3] C^o at lower limit                  
+                upperxlimit2 = 1.0E6_wp*upperxlimit*yvals(2)/(Rgas*TKelvin)
+                second_xaxis_label = "$C_j^{\rm o}$ / [$\mu {\rm g}\;{\rm m}^{-3}$]" 
+            endif
+            !---
             call PlotNow(ptitle, xlabel, lylabel, rylabel, fileoutname, SD)
         endif
     else
         cycle
     endif
-    !========================================================================================================================
 enddo !kset
+!========================================================================================================================
+
 deallocate(c2pv, iz, ia, x2vals, y2vals, key) 
 
 
+
+!!=========================================================================================================================
+!!=  activity coefficient ratio for each organic with water and hexanediol. vs. OSc
+!!=========================================================================================================================
 do k = 1,1 !nsets
-    !!=========================================================================================================================
-    !!= Activity coefficient ratio for each organic with water and hexanediol. vs. OSc
-    !!=========================================================================================================================
     if (cPropDataExists(k)) then
         uxlim = -1.0E80_wp
         lxlim = 1.0E80_wp
@@ -652,15 +933,17 @@ do k = 1,1 !nsets
                 xv(1) = CompPropData(i,4,k)                                 !mean OS_C
                 yv(1) = CompPropData(i,6,k)
                 zv(1) = CompPropData(i,2,k)
-                !!point colors:
-                !!O:C ratio is zv(1) = CompPropData(i,2,k)
-                !if (krows(k) < 1000) then
-                !    bigDsymbs = .true.
-                !endif
+                !point colors:
                 call defzcolval(zv(1), dcol(i), colbarlowlim, colbaruplim)  !map the O:C value to the colour bar index number dcol(i)
                 write(pvchar,'(F10.2)') zv(1)
-                legtxt = "O:C ratio is: "//pvchar
-                call DefinePlotData(xv, yv, xyerror0, 1, dcol(i), 3, 21, 5, legtxt, cthickn)
+                if (i < max_legd_lin) then
+                    legtxt = "O:C ratio is: "//pvchar
+                else if (i == max_legd_lin) then
+                    legtxt = "plus other points (not shown)"      
+                else                                                        !too many potential legend entries
+                    legtxt = ""                                             !don't show in legend
+                endif
+                call DefinePlotData(xv(1:1), yv(1:1), xyerror0(1:4,1:1), 1, dcol(i), 3, 21, 5, legtxt, cthickn)
                 uxlim = max(uxlim, xv(1))
                 lxlim = min(lxlim, xv(1))
                 uylim = max(uylim, yv(1))
@@ -719,13 +1002,14 @@ do k = 1,1 !nsets
         endif
         call PlotNow(ptitle, xlabel, lylabel, rylabel, fileoutname, SD)
     endif
-    !========================================================================================================================
 enddo !k
+!========================================================================================================================
 
+
+!!=========================================================================================================================
+!!= activity coefficient ratio for each organic with water and hexanediol. vs. O:C
+!!=========================================================================================================================
 do k = 1,1 !nsets    
-    !!=========================================================================================================================
-    !!= Activity coefficient ratio for each organic with water and hexanediol. vs. O:C
-    !!=========================================================================================================================
     if (cPropDataExists(k)) then
         uxlim = -1.0E80_wp
         lxlim = 1.0E80_wp
@@ -751,15 +1035,17 @@ do k = 1,1 !nsets
                 logyaxis = yaxisIsLog
                 xv(1) = CompPropData(i,2,k)
                 yv(1) = CompPropData(i,6,k)
-                !!point colors:
-                !!O:C ratio is CompPropData(i,2,k)
-                !if (krows(k) < 1000) then
-                !    bigDsymbs = .true.
-                !endif
+                !point colors:
                 call defzcolval(CompPropData(i,2,k), dcol(i), colbarlowlim, colbaruplim)  !map the O:C value to the colour bar index number dcol(i)
                 write(pvchar,'(F10.2)') xv(1)
-                legtxt = "O:C ratio is: "//pvchar
-                call DefinePlotData(xv, yv, xyerror0, 1, dcol(i), 3, 21, 5, legtxt, cthickn)
+                if (i < max_legd_lin) then
+                    legtxt = "O:C ratio is: "//pvchar
+                else if (i == max_legd_lin) then
+                    legtxt = "plus other points (not shown)"      
+                else                                                        !too many potential legend entries
+                    legtxt = ""                                             !don't show in legend
+                endif
+                call DefinePlotData(xv(1:1), yv(1:1), xyerror0(1:4,1:1), 1, dcol(i), 3, 21, 5, legtxt, cthickn)
                 uxlim = max(uxlim, xv(1))
                 lxlim = min(lxlim, xv(1))
                 uylim = max(uylim, yv(1))
@@ -818,12 +1104,14 @@ do k = 1,1 !nsets
         endif
         call PlotNow(ptitle,xlabel,lylabel,rylabel,fileoutname,SD)
     endif
-    !========================================================================================================================
 enddo !k
+!========================================================================================================================
+
 
 !deallocate the used dynamic arrays:
 call DeallocCreateplotArrays() 
 deallocate(CompPropData, LumpConcData, cpv, xv, yv, zv, wv, xvals, yvals, xyerror0, STAT=allocstat)
+deallocate(xgr, ygr, xgrid, ygrid)
 if (allocated(clustSurrogateIndx)) then
     deallocate( clustCenter, clustSurrogateIndx, clustPop, compCluster )
 endif

@@ -10,7 +10,7 @@
 !*   Dept. Atmospheric and Oceanic Sciences, McGill University                          *
 !*                                                                                      *
 !*   -> created:        2007                                                            *
-!*   -> latest changes: 2025-07-12                                                      *
+!*   -> latest changes: 2026-04-07                                                      *
 !*                                                                                      *
 !****************************************************************************************
 module ModCreatePlot
@@ -20,7 +20,8 @@ use ModRoundScale, only : roundnicely, scalenicely
 
 implicit none   
 !...
-integer,public :: NCplot 	        !NCplot = maximum number of distinct plot labels and colors considered; needs to be set during plotting setup
+integer,public :: NCplot 	                            !NCplot = maximum number of distinct plot labels and colors considered; needs to be set during plotting setup
+integer,parameter :: max_legd_lin = 30                  !maximum number of lines (entries) shown in plot legends
 integer,private :: curvenr, curves_l, curves_r, txtl
 !...
 integer,parameter,public  :: ncprows = 400		        !maximum number of data rows in plot data
@@ -40,7 +41,8 @@ integer,dimension(12),public :: colelectrol
 integer,dimension(254),private :: customzcolno
 !...
 real(wp),parameter,public :: rdefault = -8.88888E280_wp !an unusual, small (negative) value...																						  
-real(wp),public :: max_y, min_y, lowerylimit, upperylimit, lowerylimit2, upperylimit2, lowerxlimit, upperxlimit											  
+real(wp),public :: max_y, min_y, lowerylimit, upperylimit, lowerylimit2, upperylimit2, &
+    & lowerxlimit, upperxlimit, lowerxlimit2, upperxlimit2										  
 !private reals:
 real(wp),parameter,private :: deps = epsilon(1.0_wp)
 real(wp),private :: zcolbar0, zcolbar254, zcolbarstep													
@@ -55,10 +57,11 @@ real(wp),dimension(:,:,:),allocatable,private :: compby
 character(len=3),public :: metaff
 character(len=:),allocatable,private :: defaultInpPath, defaultOutPath, defaultColPath
 character(len=75),private :: zaxislabel
+character(len=75),public :: second_xaxis_label
 character(len=150),private :: customcolfile										  
 character(len=75),dimension(ncurves),private :: clegtxt
 character(len=75),dimension(nshareas),private :: alegtxt					
-character(len=75),dimension(6),private :: clylabel,crylabel !bar graph y-axis labels
+character(len=75),dimension(6),private :: clylabel, crylabel !bar graph y-axis labels
 character(len=85),dimension(6),public :: pietittxt !pie chart title text array
 character(len=75),dimension(:),allocatable,public :: pielegtxt !pie chart data legend text array
 character(len=85),dimension(ncurves,6),private :: cpietittxt !pie chart title text array
@@ -68,7 +71,7 @@ character(len=messagetextlength),dimension(messagelinesmax),private :: messagetx
 logical,public :: bigDsymbs, biglabelfont, bigsymbs, customCol, equalfontwidth, logxaxis, mirrorAxis, &
     & slimplot, slimplotX, smallsymbs, specialxrange, specialyrange, specialyrange2, squareplot, ternaryLLEoutplot, &
     & ticksinside, bargraphplot, compbars, comptemp, Cstarplot, directory_outputGouri, fixminxax, legplot, logyaxis, &
-    & messagebox, newplot, newplot2, newplot3, nogridlines, plotbarborder, plotoverlay, xorg3bar
+    & messagebox, newplot, newplot2, newplot3, nogridlines, plotbarborder, plotoverlay, xorg3bar, is_secondary_xaxis
 logical,private :: discreteZcol, zlogscalebar, showcustomcolbar, genericPlotModule												
 logical,dimension(12),public :: bargylimits !used to define upper yaxis limits for up to 3 different bar graphs on a plot page
 logical,dimension(ncurves),public :: pielabshift
@@ -143,7 +146,7 @@ subroutine DefinePlotData(xvals, yvals, xyerror, waxis, color, ltype, symbtype, 
 implicit none
 !...
 real(wp),dimension(:),intent(in) :: xvals, yvals
-real(wp),dimension(1:size(xvals),1:4),intent(in) :: xyerror
+real(wp),dimension(1:4,1:size(xvals)),intent(in) :: xyerror
 integer,intent(in) :: waxis, color, ltype, symbtype, lstyle
 real(wp),intent(in) :: thick
 !...
@@ -158,7 +161,7 @@ logical :: isdata
 
 if (newplot) then  !this start a new plot page, thus reset the counters and arrays:
     if (.not. allocated(cxvals)) then
-        allocate( cxvals(ncurves,ncprows), cyvals(ncurves,ncprows), cxyerror(ncurves,ncprows,4), stat = allocstat)
+        allocate( cxvals(ncprows,ncurves), cyvals(ncprows,ncurves), cxyerror(4,ncprows,ncurves), stat = allocstat )
     endif
     curvenr = 0
     curves_l = 0
@@ -188,22 +191,22 @@ if (newplot) then  !this start a new plot page, thus reset the counters and arra
     call defplotcolorlists() !call to define color tables for plots
 endif
 
-nsize = min(size(xvals(:), DIM=1), size(yvals(:), DIM=1))
+nsize = min(size(xvals(:), dim=1), size(yvals(:), dim=1))
 
 !check data range:
 npts = 0
 curvepointsno = npts
 do i = 1,nsize-1
-    if (xvals(i) > (-1.0E8_wp) .and. ((xvals(i) > deps .or. xvals(i) < (-deps)) .or. (xvals(i+1) > deps .or. xvals(i+1) < (-deps)) .or. &
-        &  (yvals(i) > deps .or. yvals(i) < (-deps)) .or. (yvals(i+1) > deps .or. yvals(i+1) < (-deps)))) then
-    npts = npts+1 !count points worth plotting...
-    else
-        exit !leave the loop and continue...
+    if ( xvals(i) > (rdefault + deps) .and. &
+        & ( (xvals(i) > deps .or. xvals(i) < (-deps)) .or. (xvals(i+1) > deps .or. xvals(i+1) < (-deps)) .or. &
+        & (yvals(i) > deps .or. yvals(i) < (-deps)) .or. (yvals(i+1) > deps .or. yvals(i+1) < (-deps)) ) ) then
+        npts = npts+1   !count points worth plotting...
     endif
 enddo
 !check the last array entry:
 i = nsize
-if (xvals(i) > -1.0E8_wp .and. ((xvals(i) > deps .or. xvals(i) < (-deps)) .or. (yvals(i) > deps .or. yvals(i) < (-deps)))) then
+if (xvals(i) > (rdefault + deps) .and. &
+    & ((xvals(i) > deps .or. xvals(i) < (-deps)) .or. (yvals(i) > deps .or. yvals(i) < (-deps)))) then
     npts = npts+1 !count points worth plotting...
 endif
 
@@ -216,15 +219,15 @@ endif
 
 if (isdata) then
     !set the curve attributes in the array:
-    curvenr = curvenr+1
+    curvenr = curvenr + 1
     curvepointsno = npts
-    cxvals(curvenr,1:npts) = xvals(1:npts)
-    cyvals(curvenr,1:npts) = yvals(1:npts)
+    cxvals(1:npts,curvenr) = xvals(1:npts)
+    cyvals(1:npts,curvenr) = yvals(1:npts)
     do i = 1,npts
-        cxyerror(curvenr,i,1:4) = xyerror(i,1:4)
+        cxyerror(1:4,i,curvenr) = xyerror(1:4,i)
     enddo
     cwaxis(curvenr) = waxis
-    ccolor(curvenr) = color  !the color number (0 - 255) (default: in the RAIN colour spectrum of DISLIN)
+    ccolor(curvenr) = color  !the color number (0 - 255)
     cltype(curvenr) = ltype
     rownr(curvenr) = npts
     csymbtype(curvenr) = symbtype
@@ -250,16 +253,19 @@ if (isdata) then
     endif
 
     !now find out the appropriate y-axis scaling range for this curve:
-    N=npts
-    if (ltype == 1) then !ltype is line
-        yrayspec(5) = max(min_y, lowerylimit) !0.49_wp
+    if (ltype == 1) then        !ltype is line
+        if (specialyrange) then
+            yrayspec(5) = max(min_y, lowerylimit) 
+        else
+            yrayspec(5) = min_y
+        endif
     else
         yrayspec(5) = min_y*0.9_wp
     endif
-    yrayspec(3) = maxval(yvals(1:N))
-    yrayspec(3) = max(yrayspec(3),yrayspec(5))*1.01_wp
+    yrayspec(3) = maxval(yvals(1:npts))
+    yrayspec(3) = max(yrayspec(3), yrayspec(5))*1.01_wp
     yrayspec(4) = yrayspec(5)*1.01_wp
-    if (yrayspec(3) > yrayspec(4) .and. yrayspec(4) > 1.0E-12_wp .and. ltype == 1 .and. max_y < 10.0_wp) then  !Check for very large values and reduce to a given level...
+    if (yrayspec(3) > yrayspec(4) .and. yrayspec(4) > deps .and. ltype == 1 .and. max_y < 10.0_wp) then  !Check for very large values and reduce to a given level...
         if (yrayspec(4) < max_y) then
             yrayspec(3) = yrayspec(4)
         else
@@ -271,7 +277,7 @@ if (isdata) then
     else if (yrayspec(3) < min_y) then
         yrayspec(3) = min_y
     endif
-
+    
     !round up the values to a certain axis step size:
     yy = yrayspec(3)
     if (yy > 1.0_wp .and. yy < 1.001_wp) then
@@ -279,7 +285,7 @@ if (isdata) then
     else
         yy = roundnicely(yy, 2, "up")
     endif
-
+    
     !assign the max value to the corresponding axis:
     if (waxis == 1) then !left axis
         lyraymax(curves_l) = yy !left y-axis
@@ -326,13 +332,13 @@ endif
 !check data range:
 nicomp = 0
 do i = 1,2*NCplot
-    if (sum(abs(yvals(i,:))) > 1.0E-14_wp) then
+    if (sum(abs(yvals(i,:))) > deps) then
         nicomp = i !nicomp+1 !count number of different independent components (nicomp)
     endif
 enddo
 npts = 0
 do i = 1,min( ncprows, size(yvals(1,:)) )
-    if (xvals(i) > (-1.0E6_wp) .and. ((xvals(i) > -1.0E-14_wp .or. xvals(i) < (-1.0E-12_wp)) .and. sum(abs(yvals(1:nicomp,i))) > 1.0E-14_wp) &
+    if (xvals(i) > (rdefault + deps) .and. ((xvals(i) > -deps .or. xvals(i) < -deps) .and. sum(abs(yvals(1:nicomp,i))) > deps) &
         & .or. (xvals(i) > 1.0_wp)) then
         npts = i !npts+1 !count number of bars worth plotting...
     endif
@@ -452,15 +458,16 @@ use dislin  !the DISLIN plotting library (www.dislin.de)
 
 implicit none
 !...
-integer :: i, ntop, N, NXL, NYL, NZL, symbsize, NLIN, NMAXLN, ILIN, NXA, &
-& NYA, Tsize, Lsize, Namesize, Numbsize, Lcompsize, NTYP, ileg, legstop, &
+integer :: i, ntop, N, NXL, NYL, NZL, symbsize, nlin, ilin, NXA, NYA, &
+& Tsize, Lsize, Namesize, Numbsize, Lcompsize, NTYP, ileg, legstop, &
 & bigsymbsize, iclr, ityp, smallpolys, nshadeareas, nxwid, &
 & nxpos, nypos, Nheight, ndig
 integer,dimension(2) :: NRAY
 integer,dimension(4) :: INRAY
 integer,dimension(:),allocatable :: barcolset
+integer,dimension(:),allocatable :: iray            !iray is used for legend lines with LEGSEL
 !...
-parameter (NMAXLN = 75)
+integer,parameter :: NMAXLN = 75
 !...
 real(wp) :: StandardDev, xmaxax, xminax, xlab, xstep, yminax, ymaxax, ylab, ystep, logymin, &
     & xminaxin, xmaxaxin, dtiny, rinc, ry, rypos, rypos0
@@ -470,7 +477,8 @@ real(wp),dimension(ncprows) :: xax, yax, E1RAY, E2RAY
 !...
 character(len=75),intent(in) :: outname_cplot
 character(len=75) :: outname_dislin
-character(len=(count(clegplot(1:curvenr))*NMAXLN)) :: CBUF
+!!character(len=(count(clegplot(1:curvenr))*NMAXLN)) :: CBUF
+character(len=:),allocatable :: CBUF
 character(len=NMAXLN) :: CSTR
 character(len=132),dimension(4) :: ptitle
 character(len=75) :: xlabel, lylabel, rylabel
@@ -490,13 +498,13 @@ xminax = 0.0_wp; xmaxax = 10.0_wp; xlab = 0.0_wp; xstep = 1.0_wp;
 yminax = 0.0_wp; ymaxax = 10.0_wp; ylab = 0.0_wp; ystep = 1.0_wp;
   
 !check whether there is any curve/points to plot at all:
-if (curvenr < 1) then !there is nothing to plot
+if (curvenr < 1) then                           !there is nothing to plot
 	!$OMP CRITICAL												   
     write(*,*) "There was no curve to plot in this call to PlotNow!"
     write(*,*) "proceeding without producing a plot..."
     write(*,*) ""
 	!$OMP end CRITICAL				 
-    newplot = .true. !set it back for next plot page
+    newplot = .true.                            !set it back for next plot page
     newplot2 = .true.
     newplot3 = .true.
     messagebox = .false.
@@ -510,19 +518,19 @@ if (curvenr < 1) then !there is nothing to plot
     specialyrange2 = .false.
     plotoverlay = .false.
     customCol = .false.
-    logyaxis = .false. !set the logarithmic y-axis to false (so use linear).
+    logyaxis = .false.                          !set the logarithmic y-axis to false (so use linear).
     logxaxis = .false.
     legplot = .true.
     nogridlines = .false.
     mirrorAxis = .false.
-    ticksinside = .false. !if true, tick marks will be plotted inside of axis system
+    ticksinside = .false.                       !if true, tick marks will be plotted inside of axis system
     biglabelfont = .false.
     showcustomcolbar = .false.
     slimplot = .false.
     squareplot = .false.
 	equalfontwidth = .false.						
     ptitle = ""
-    return !leave the subroutine
+    return                                      !leave the subroutine
 endif
   
 !paramparamparamparamparamparamparamparamparamparamparamparamparamparamparamparamparamparam
@@ -534,28 +542,28 @@ endif
 !Set font sizes etc.: 
 
 if (squareplot .or. slimplot) then
-    symbsize = 32 !26 !40 !32 !symbol size
-    Tsize = 22   !Title font size
+    symbsize = 32                               !symbol size
+    Tsize = 22                                  !Title font size
     if (any(len_trim(ptitle(1:4)) > 70)) then
         Tsize = 16
     endif
-    Lsize = 19   	!Legends font size
-    Lcompsize = 24  !composition plot legend size
-    Namesize = 36  	!axis name font
-    Numbsize = 32  	!axis numbers size
+    Lsize = 19   	                            !Legends font size
+    Lcompsize = 24                              !composition plot legend size
+    Namesize = 36  	                            !axis name font
+    Numbsize = 32  	                            !axis numbers size
 else
-    symbsize = 36 !26 !symbol size
-    Tsize = 22   !Title font size
+    symbsize = 36                               !26 !symbol size
+    Tsize = 22                                  !Title font size
     if (any(len_trim(ptitle(1:4)) > 70)) then
         Tsize = 16
     endif
-    Lsize = 19   	!Legends font size
-    Lcompsize = 24  !composition plot legend size
-    Namesize = 40  	!axis name font
-    Numbsize = 32  	!axis numbers size
+    Lsize = 19   	                            !Legends font size
+    Lcompsize = 24                              !composition plot legend size
+    Namesize = 40  	                            !axis name font
+    Numbsize = 32  	                            !axis numbers size
 endif
 if (smallsymbs) then
-    symbsize = symbsize*2/3 	!symbol size
+    symbsize = symbsize*2/3 	                !symbol size
     bigsymbsize = symbsize*5/4  
 else if (bigsymbs) then
     bigsymbsize = 44
@@ -565,10 +573,10 @@ if (biglabelfont) then
     Namesize = Namesize*4/3							 
 endif
 if (plotoverlay) then
-    Lsize = 18   	!Legends font size
-    symbsize = 15 	!small symbols
+    Lsize = 18   	                            !Legends font size
+    symbsize = 15 	                            !small symbols
 endif
-logymin = 1.0E-3_wp  !the minimum y value when logarithmic y-axis are plottet without special y-range given
+logymin = 1.0E-3_wp                             !the minimum y value when logarithmic y-axis are plottet without special y-range given
     
 !paramparamparamparamparamparamparamparamparamparamparamparamparamparamparamparamparamparam
 !paramparamparamparamparamparamparamparamparamparamparamparamparamparamparamparamparamparam
@@ -578,7 +586,7 @@ if (.not. plotoverlay) then !else the DISLIN was already initialized
     !set output file
     call METAFL(metaff) 
     outname_dislin = trim(outname_cplot)//"."//(trim(metaff))
-	outname_dislin = trim(defaultOutPath)//trim(outname_dislin) 	!default case
+	outname_dislin = trim(defaultOutPath)//trim(outname_dislin) 	        !default case
     !special cases (used in AIOMFAC full model):
     if (.not. genericPlotModule) then
         outname_dislin = trim(outname_cplot)//"."//(trim(metaff))
@@ -589,12 +597,12 @@ if (.not. plotoverlay) then !else the DISLIN was already initialized
         else if (directory_outputGouri) then
             outname_dislin = "../Output_Gouri/"//trim(outname_dislin) 
         else
-	        outname_dislin = trim(defaultOutPath)//trim(outname_dislin) 	!default case
+	        outname_dislin = trim(defaultOutPath)//trim(outname_dislin)     !default case
         endif 
     endif
-    call SETFIL(trim(outname_dislin)) !set filename in dislin
-    call FILMOD("DELETE") !files will be overwritten if they have the same name..
-    call SCRMOD ("NOREV")  !set background color to white and foreground to black
+    call SETFIL(trim(outname_dislin))                                       !set filename in dislin
+    call FILMOD("DELETE")                                                   !files will be overwritten if they have the same name..
+    call SCRMOD ("NOREV")                                                   !set background color to white and foreground to black
     call SETPAG("DA4L")
     call SCLFAC(1.0_wp)
     call SCLMOD("DOWN")
@@ -606,26 +614,26 @@ if (.not. plotoverlay) then !else the DISLIN was already initialized
     endif
         
     !Set the overall plot parameters and initialize the plot page:
-    call DISINI !initialize dislin
-    call SETVLT("RAIN")  !Rainbow colors (256)
-    call PAGFLL(255) !background color white
-    call SETCLR(0) !black
+    call DISINI                                                             !initialize dislin
+    call SETVLT("RAIN")                                                     !Rainbow colors (256)
+    call PAGFLL(255)                                                        !background color white
+    call SETCLR(0)                                                          !black
     if (metaff == "wmf") then
-        call WINFNT("Arial")  !FONT in Windows  !Arial  ! Times New Roman
+        call WINFNT("Arial")                                                !FONT in Windows  !Arial  ! Times New Roman
     else if (metaff == "eps" .or. metaff == "ps" .or. metaff == "pdf" .or. metaff == "svg") then
-        call PSFONT("Helvetica")  !for ps, eps and pdf output
-        call PSMODE('BOTH')  !allow Greek and Italic modes
+        call PSFONT("Helvetica")                                            !for ps, eps and pdf output
+        !call TTFONT ("arial.ttf")
+        call PSMODE('both')                                                 !allow Greek and Italic modes
     else
         call COMPLX
     endif
-    call EUSHFT ('GERMAN', '!') !used to print German umlaut characters with Dislin TeX: then !o writes ö
+    call EUSHFT ('GERMAN', '!')                                             !used to print German umlaut characters with Dislin TeX: then !o writes ö
     !date of print and dislin version on the lower right corner
     call HEIGHT(Lsize)
     call PAGHDR("","",2,0) 
-    call ERRMOD ("CHECK", "OFF")  !Don't pass warnings of points lying outside of the coordinate systems
+    call ERRMOD ("CHECK", "OFF")                                            !Don't pass warnings of points lying outside of the coordinate systems
     call CHASPC(-0.06_wp)
     call HEIGHT(Namesize) 
-    !write some LaTeX code for better axes-text:
     call TEXMOD ("ON")
 
     !Set Titeltext on line no. 1:
@@ -640,42 +648,42 @@ if (.not. plotoverlay) then !else the DISLIN was already initialized
     call TITJUS ("LEFT")
 
     !Set axis labels:
-    call GETPAG (NXL, NYL)  !get the page total DIMENSIONs NXL=2970, NYL = 2100
+    call GETPAG (NXL, NYL)                                                  !get the page total dimensions NXL=2970, NYL = 2100
     if (squareplot .and. (.not. slimplot)) then
-        call AXSPOS (360, 1400)  !position the axis system (the lower left axis corner)
-        call AXSLEN (1000, 1000)  !now set axis length on the page in plot coord.
-        if (compbars .or. comptemp) then !for print of composition bars or temperature values
-            if (barpmodeno > 1) then !LLE
-                call AXSPOS (360, 1400)  !position the axis system (the lower left axis corner)
-                call AXSLEN (1000, 1000)  !now set axis length on the page in plot coord.   
+        call AXSPOS (360, 1400)                                             !position the axis system (the lower left axis corner)
+        call AXSLEN (1000, 1000)                                            !now set axis length on the page in plot coord.
+        if (compbars .or. comptemp) then                                    !for print of composition bars or temperature values
+            if (barpmodeno > 1) then
+                call AXSPOS (360, 1400)                                     !position the axis system (the lower left axis corner)
+                call AXSLEN (1000, 1000)                                    !now set axis length on the page in plot coord.   
             else !only one comp. plot
-                call AXSPOS (360, 1400)  !position the axis system (the lower left axis corner)
-                call AXSLEN (1000, 1000)  !now set axis length on the page in plot coord.    
+                call AXSPOS (360, 1400)                                     !position the axis system (the lower left axis corner)
+                call AXSLEN (1000, 1000)                                    !now set axis length on the page in plot coord.    
             endif
         endif
     else if (slimplot) then
         if (squareplot) then
-            call AXSPOS (360, 860)  !position the axis system (the lower left axis corner)
-            call AXSLEN (1000, 400)  !now set axis length on the page in plot coord.
+            call AXSPOS (360, 860)                                          !position the axis system (the lower left axis corner)
+            call AXSLEN (1000, 400)                                         !now set axis length on the page in plot coord.
         else
-            call AXSPOS (360, 1060)  !position the axis system (the lower left axis corner)
-            call AXSLEN (1500, 600)  !now set axis length on the page in plot coord.
+            call AXSPOS (360, 1060)                                         !position the axis system (the lower left axis corner)
+            call AXSLEN (1500, 600)                                         !now set axis length on the page in plot coord.
         endif
     else
-        call AXSPOS (360, 1400)  !position the axis system (the lower left axis corner)
-        call AXSLEN (1500, 1000)  !now set axis length on the page in plot coord.
-        if (compbars .or. comptemp) then !for print of composition bars
-            if (barpmodeno > 1) then !LLE
-                call AXSPOS (int(NXL*0.10_wp), int(NYL*0.86_wp)-480)  !position the axis system (the lower left axis corner)
-                call AXSLEN (int(NXL*0.70_wp), int(NYL*0.64_wp)-480)  !now set axis length on the page in plot coord.   
+        call AXSPOS (360, 1400)                                             !position the axis system (the lower left axis corner)
+        call AXSLEN (1500, 1000)                                            !now set axis length on the page in plot coord.
+        if (compbars .or. comptemp) then                                    !for print of composition bars
+            if (barpmodeno > 1) then
+                call AXSPOS (int(NXL*0.10_wp), int(NYL*0.86_wp)-480)        !position the axis system (the lower left axis corner)
+                call AXSLEN (int(NXL*0.70_wp), int(NYL*0.64_wp)-480)        !now set axis length on the page in plot coord.   
             else !only one comp. plot
-                call AXSPOS (int(NXL*0.10_wp), int(NYL*0.86_wp)-250)  !position the axis system (the lower left axis corner)
-                call AXSLEN (int(NXL*0.70_wp), int(NYL*0.64_wp)-250)  !now set axis length on the page in plot coord.    
+                call AXSPOS (int(NXL*0.10_wp), int(NYL*0.86_wp)-250)        !position the axis system (the lower left axis corner)
+                call AXSLEN (int(NXL*0.70_wp), int(NYL*0.64_wp)-250)        !now set axis length on the page in plot coord.    
             endif
         endif
     endif
-    call NAMDIS (44, "Y")  !distance between axis text and axis names
-    call NAMDIS (44, "X")  
+    call NAMDIS (44, "Y")                                                   !distance between axis text and axis names
+    call NAMDIS (34, "X")                                                   !used to be 44
     call HNAME (Namesize)
     call NAME (trim(xlabel), "X")
     call NAME (trim(lylabel), "Y")
@@ -696,10 +704,10 @@ endif
 logy_l = .false.
 logy_r = .false.
 do i=1,curvenr
-    if (clogyaxis(i) .and. cwaxis(i) == 1) then !log left y-axis
+    if (clogyaxis(i) .and. cwaxis(i) == 1) then                             !log left y-axis
         logy_l = .true.
         call NEGLOG(deps)
-    else if (clogyaxis(i) .and. cwaxis(i) == 2) then !log right y-axis
+    else if (clogyaxis(i) .and. cwaxis(i) == 2) then                        !log right y-axis
         logy_r = .true.
         call NEGLOG(deps)
     endif
@@ -764,7 +772,7 @@ if (yminax < 0.0_wp) then
     yrayspec_l(1) = yminax
 endif
 yrayspec_l(2) = min_y
-NLIN = 0
+nlin = 0
 call AXSSCL ("LIN", "Y")    !the default choice
 if (logy_l) then
     yrayspec_l(2) = max(yrayspec_l(2), logymin)
@@ -780,13 +788,13 @@ if (logy_l) then
         endif
     endif
 endif
-do i=1,curvenr
+do i = 1,curvenr
     if (cwaxis(i) == 1) then
         CSTR = trim(clegtxt(i))
         if (len_trim(CSTR) > 2) then
-            NLIN = NLIN+1 !legend line Nr.
+            nlin = nlin + 1                                                 !legend line number
         endif
-        if (cltype(i) == 1) then !"line"
+        if (cltype(i) == 1) then                                            !"line"
             csymbtype(i)= -1
         endif
     endif
@@ -799,7 +807,7 @@ if (specialyrange) then
     yminax = min(yminax, lowerylimit)
     if (logy_l) then
         ystep = 1.0_wp
-        yrayspec_l(3) = lowerylimit*10.001_wp !cover at least one order of magnitude in log10 scale
+        yrayspec_l(3) = lowerylimit*10.001_wp                               !cover at least one order of magnitude in log10 scale
         yrayspec_l(2) = roundnicely(upperylimit,1,"up")
         yrayspec_l(2) = max(yrayspec_l(2), 1.0E-15_wp)
     else
@@ -808,57 +816,65 @@ if (specialyrange) then
 endif
 !automatic scaling of axis according to a selected part of the data:
 call SETSCL(yrayspec_l, 3, "Y")  
-if (mirrorAxis) then !set the exact same values, labels and tick mark properties on x-axis as on y-axis (e.g. for 1:1 plots)
+if (mirrorAxis) then                                                        !set the exact same values, labels and tick mark properties on x-axis as on y-axis (e.g. for 1:1 plots)
     call SETSCL(yrayspec_l, 3, "X")
 endif
     
-!plot axis and ticks from (xmin,xmax,first_x_label,increment_x / ymin,ymax,first_y_label,increment_Y):
+!plot axis and ticks from (xmin, xmax,first_x_label, increment_x / ymin, ymax, first_y_label, increment_Y):
 if (.not. plotoverlay) then
     if (ryaxis) then
-        call SETGRF ("NAME", "NAME", "TICKS", "LINE")
+        if (is_secondary_xaxis) then
+            call SETGRF ("NAME", "NAME", "NONE", "LINE")
+        else
+            call SETGRF ("NAME", "NAME", "TICKS", "LINE")
+        endif
     else
-        call SETGRF ("NAME", "NAME", "TICKS", "TICKS")
+        if (is_secondary_xaxis) then
+            call SETGRF ("NAME", "NAME", "NONE", "TICKS")
+        else
+            call SETGRF ("NAME", "NAME", "TICKS", "TICKS")
+        endif
     endif
 else
-    call SETGRF ("NONE", "NONE", "NONE", "NONE") !set none as the grid and axis will be plotted already before in the calling plot
+    call SETGRF ("NONE", "NONE", "NONE", "NONE")                            !set "none" as the grid and axis will be plotted already before in the calling plot
 endif
 call HEIGHT(Numbsize)
 call CHASPC(-0.07_wp)
-call TICKS(4, "XY") !the number of ticks between axis labels (default: 2) 
+call TICKS(4, "XY")                                                         !the number of ticks between axis labels (default: 2) 
 if (.not. mirrorAxis) then						  
 	if (abs(xstep) < 0.01_wp) then
-		call LABDIG (4, "X") !number of decimals xaxis
+		call LABDIG (4, "X")                                                !number of decimals xaxis
 	else if (abs(xstep) < 0.1_wp) then
-		call LABDIG (3, "X") !number of decimals xaxis
+		call LABDIG (3, "X")                                                
 	else if (abs(xstep) < 0.2_wp) then
-		call LABDIG (2, "X") !number of decimals xaxis
+		call LABDIG (2, "X")
 	else if (abs(xstep) > 1.0_wp) then
-		call LABDIG (1, "X") !number of decimals xaxis
+		call LABDIG (1, "X")
 		if (xstep < 10.0_wp) then
 			call TICKS(int(xstep), "X")    
 		endif
 	else
-		call LABDIG (1, "X") !number of decimals xaxis
+		call LABDIG (1, "X")
 	endif
 endif
 if ((.not. logy_l) .and. (abs(ymaxax - yminax) < 1.0E-3_wp .or. abs(ymaxax - yminax) > 9.99999E3_wp)) then
-    call LABELS("FEXP", "Y") !use powers of 10 "scientific" number format for axis labels
+    call LABELS("FEXP", "Y")                                                !use powers of 10 "scientific" number format for axis labels
 else
     call LABELS("FLOAT", "Y")
 endif
 !...
 !some of the axis use automatic axis scaling and overwrite whatever values are given in the code below:
 if (ticksinside) then
-    call TICPOS('REVERS', 'XY') !plots tick marks inside plot area
+    call TICPOS('REVERS', 'XY')                                             !plots tick marks inside plot area
 endif					 
-call SETVLT("RAIN") !the Dislin rainbow palette
+call SETVLT("RAIN")                                                         !the Dislin rainbow colors palette
 call COLOR("BLACK")
 call SOLID
-call PENWID(1.0_wp) !set to default value
-call LINWID(1) !set to default value
-call THKCRV(1) !set to default value
-if (mirrorAxis) then !set the exact same values and tick mark properties on x-axis as on y-axis (e.g. for 1:1 plots)
-    call TICKS(2, "XY") !the number of ticks between axis labels (default: 2)  
+call PENWID(1.0_wp)
+call LINWID(1) 
+call THKCRV(1)
+if (mirrorAxis) then                                                        !set the exact same values and tick mark properties on x-axis as on y-axis (e.g. for 1:1 plots)
+    call TICKS(2, "XY")                                                     !the number of ticks between axis labels (default: 2)  
     if (abs(upperylimit - lowerylimit) > 5.0_wp) then
         call INTAX
     endif
@@ -868,8 +884,8 @@ if (mirrorAxis) then !set the exact same values and tick mark properties on x-ax
     xmaxax = ymaxax
     xlab = ylab
     xstep = ystep
-    call LABDIG (ndig, "XY") !number of decimals xaxis
-    call GRAF(xminax, xmaxax, xlab, xstep,  yminax, ymaxax, ylab, ystep) !use parameters defined with GAXPAR
+    call LABDIG (ndig, "XY")
+    call GRAF(xminax, xmaxax, xlab, xstep,  yminax, ymaxax, ylab, ystep)    !use parameters defined with GAXPAR
 else
     if (logxaxis) then
         !adjust axis scaling parameters with more detail control, first for x-axis:
@@ -877,23 +893,23 @@ else
         call AXSSCL ("log", "X")
         call GAXPAR (log10(lowerxlimit), log10(upperxlimit), 'NOEXTEND', 'X', xminax, xmaxax, xlab, xstep, ndig)
         xlab = ceiling(xminax)
-        xstep = min( xstep,  anint((floor(xmaxax) - xlab) / 6.0_wp) )
-        call LABDIG (ndig, 'X')     !number of decimals x-axis
-        call LOGTIC ("FULL")        !"AUTO"
+        xstep = min( xstep, anint((floor(xmaxax) - xlab) / 6.0_wp) )
+        call LABDIG (ndig, 'X')                                             !number of decimals x-axis
+        call LOGTIC ("FULL")                                                !"AUTO"
         call LABELS("log", "X")
         !now for y-axis:
         if (logy_l) then
             call AXSSCL ("log", "Y")
             call GAXPAR (log10(lowerylimit), log10(upperylimit), 'NOEXTEND', 'Y', yminax, ymaxax, ylab, ystep, ndig)
             ylab = ceiling(yminax)
-            ystep = min( ystep,  anint((floor(ymaxax) - ylab) / 6.0_wp) )
+            ystep = min( ystep, anint((floor(ymaxax) - ylab) / 6.0_wp) )
             call LOGTIC ("FULL")
             call LABELS("log", "Y")
         else
             call SETSCL(yrayspec_l, 3, 'Y')
         endif
         call LABDIG (ndig, 'Y') !number of decimals
-		call GRAF(xminax, xmaxax, xlab, xstep,  yminax, ymaxax, ylab, ystep)    !will be scaled automatically using SETSCL    
+		call GRAF(xminax, xmaxax, xlab, xstep, yminax, ymaxax, ylab, ystep)     !will be scaled automatically using SETSCL    
     else
 	    xlab = xminax; ylab = yminax;
 	    if (xmaxax > 1.0_wp .and. barpmodeno > 1 .and. xstep > 0.99_wp) then
@@ -901,7 +917,7 @@ else
 		    yminax = 0.0_wp; ymaxax = 1.0_wp; ylab = 0.0_wp; ystep = 0.1_wp;
 		    call GRAF(xminax, xmaxax, xlab, xstep,  yminax, ymaxax, ylab, ystep)
 	    else
-		    call GRAF(xminax, xmaxax, xlab, xstep,  yminax, ymaxax, ylab, ystep)    !will be scaled automatically using SETSCL
+		    call GRAF(xminax, xmaxax, xlab, xstep, yminax, ymaxax, ylab, ystep) !will be scaled automatically using SETSCL
         endif
     endif
 endif
@@ -912,15 +928,15 @@ if (areapmodeno > 0) then
         smallpolys=0
         do smallpolys = 1,areabpoints(nshadeareas)-1
             ! x-coords for the four corners
-            nxray(1) = areapx(nshadeareas,smallpolys)
-            nxray(2) = areapx(nshadeareas,smallpolys)
-            nxray(3) = areapx(nshadeareas,smallpolys+1)
-            nxray(4) = areapx(nshadeareas,smallpolys+1)
+            nxray(1) = areapx(nshadeareas, smallpolys)
+            nxray(2) = areapx(nshadeareas, smallpolys)
+            nxray(3) = areapx(nshadeareas, smallpolys+1)
+            nxray(4) = areapx(nshadeareas, smallpolys+1)
             ! y-coords for the four corners
-            nyray(1) = areapyLow(nshadeareas,smallpolys)
-            nyray(2) = areapyUp(nshadeareas,smallpolys)
-            nyray(3) = areapyUp(nshadeareas,smallpolys+1)
-            nyray(4) = areapyLow(nshadeareas,smallpolys+1)
+            nyray(1) = areapyLow(nshadeareas, smallpolys)
+            nyray(2) = areapyUp(nshadeareas, smallpolys)
+            nyray(3) = areapyUp(nshadeareas, smallpolys+1)
+            nyray(4) = areapyLow(nshadeareas, smallpolys+1)
             call VLTFIL((trim(defaultColPath)//"RGBDivColTabBlueYellowRed.dat"), "LOAD") 
             call SHDPAT(areashadpat(nshadeareas))
             call SETCLR(areapatterncol(nshadeareas))
@@ -930,20 +946,26 @@ if (areapmodeno > 0) then
         deallocate(nxray, nyray)
     enddo
 endif
-if (.not. plotoverlay) then !else the DISLIN plot title and grid are set elsewhere!
+if (.not. plotoverlay) then                         !else the DISLIN plot title and grid are set elsewhere!
     !Plot now the title:
-    call HEIGHT(Tsize)  !Letter height of title
+    call HEIGHT(Tsize)                              !Letter height of title
     call CHASPC(-0.04_wp)
 	call VLTFIL(trim(defaultColPath)//"RGBColTableRealWinXP8BitAZ.dat", "LOAD") !the Win XP Icon Color Palette plus Grayscale etc. as defined by Andi Zuend
     call SETCLR(0)
+    if (is_secondary_xaxis) then 
+        call VKYTIT(150)                            !enlarge the spacing between title and axis system by the stated value in plot coordinates
+    else
+        call VKYTIT(150) 
+    endif
     call TITLE
+    
     !plot Gridlines:
     if (.not. nogridlines) then
         call SETVLT("GREY")
         if (logy_l) then
             call SOLID
             call SETCLR(230)
-            call PENWID(0.1_wp)                      !the linewidth (allowing values smaller than 1)
+            call PENWID(0.1_wp)                     !the linewidth (allowing values smaller than 1)
             call GRID(0,10)                         !light grey fine gridlines
             call SETCLR(160)
             NRAY(1) = 4                             !pen down
@@ -977,197 +999,193 @@ if (.not. plotoverlay) then !else the DISLIN plot title and grid are set elsewhe
         endif
     endif
     call SOLID
+    
 endif !plotoverlay
 
 !calculate and initialize number of lines of 1st legend:
-CBUF = ""
 CSTR = ""
-NLIN = count(clegplot(1:curvenr) .and. cwaxis(1:curvenr) == 1)
-if (NLIN > 30) then !dislin currently can only store 30 curve (attributes) for legends
-    call LEGINI(CBUF, 30, NMAXLN)
-else
-    call LEGINI(CBUF, NLIN, NMAXLN)
+nlin = count(clegplot(1:curvenr) .and. cwaxis(1:curvenr) == 1)
+if (nlin > max_legd_lin) then                     !dislin currently can only store max_legd_lin curve (attributes) for legends; since version 11.5 up to 80 lines
+    nlin = max_legd_lin
 endif
-!check whether a special legend plotting mode is necessary to store curve attributes and change curve color of white curves for visible contrast in legend:
-if (any(clegplot(1:curvenr) .and. cwaxis(1:curvenr) == 1 .and. ccolor(1:curvenr) == 255)) then
-    uselegpat = .true.
-else
-    uselegpat = .false.
-endif
+nlin = max(1, nlin)
+allocate(iray(nlin))
+iray = 0
+allocate(character(len=nlin*NMAXLN) :: CBUF)
+call LEGINI(CBUF, nlin, NMAXLN)
 
 !plot the curves on the 1st axis ###
-ILIN = 0
-if (any(.not. clegplot(1:curvenr))) then
-    legstop = 2
+ilin = 0
+if (customCol) then                                                         !read a custom colour table (generated by ColorTableCreator of Andi Zuend):
+    call VLTFIL(trim(customcolfile), 'LOAD')                                !load a customized color palette from the available choices;
 else
-    legstop = 1
+    call SETVLT('RAIN')                                                     !the Dislin rainbow palette
 endif
-if (customCol) then                                     !read a custom colour table (generated by ColorTableCreator of Andi Zuend):
-    call VLTFIL(trim(customcolfile), 'LOAD')            !load a customized color palette from the available choices;
-else
-    call SETVLT('RAIN')                                 !the Dislin rainbow palette
-endif
-do ileg = 1,legstop                                     !loop two times over the curves, the first time to only plot curves with legend entries.
-    do i = 1,curvenr  
-        if ((ileg == 1 .and. clegplot(i)) .or. (ileg == 2 .and. (.not. clegplot(i)))) then
-            if (cwaxis(i) == 1) then                    !plot it on the left y-axis, the first axis system
-                if (ccolor(i) >= 0 .and. ccolor(i) <= 255) then
-                    call SETCLR(ccolor(i))              !curve color
-                else                                    !special case or error
-                    if (ccolor(i) < 0) then             !negative value signals that a WinXP palette color should be used instead of above set color palette
-                        call VLTFIL(trim(defaultColPath)//'RGBColTableRealWinXP8BitAZ.dat', 'LOAD')
-                        call SETCLR(abs(ccolor(i)))     !set WinXP color
-                        if (customCol) then             !reset default color palette choice                          
-                            call VLTFIL(trim(customcolfile), 'LOAD')
-                        else
-                            call SETVLT('RAIN')
-                        endif
-                    endif
+do i = 1,curvenr
+    if (cwaxis(i) == 1) then                                                !plot it on the left y-axis, the first axis system
+        if (ccolor(i) >= 0 .and. ccolor(i) <= 255) then
+            call SETCLR(ccolor(i))                                          !curve color
+        else if (ccolor(i) < 0) then                                        !negative value signals that a WinXP palette color should be used instead of above set color palette
+            call VLTFIL(trim(defaultColPath)//'RGBColTableRealWinXP8BitAZ.dat', 'LOAD')
+            call SETCLR(abs(ccolor(i)))                                     !set WinXP color
+        endif
+        call THKCRV(1)                                                      !curve thickness
+        call LINWID(1)                                                      !the linewidth (will be adjusted by PENWID instead)
+        call PENWID(1.0_wp*cth(i))                                          !the linewidth (allowing also values smaller than 1)
+        call INCMRK(0)                                                      !line
+        if (cltype(i) == 2) then                                            !symbols and line
+            call INCMRK(1)                                                  !line connecting data points every n=1 datapoints will be plotted
+            call MARKER(csymbtype(i))                                       !plot symbol type at point coordinates
+            if (smallsymbs) then
+                if (cBigDsymbs(i)) then
+                    call HSYMBL(bigsymbsize)                                !symbol size
+                    call PENWID(1.3_wp*cth(i))                              !the linewidth (allowing also values smaller than 1)
+                else
+                    call PENWID(0.5_wp*cth(i))                              !the linewidth (allowing also values smaller than 1)
+                    call HSYMBL((symbsize*3)/4)                             !symbol size
                 endif
-                call THKCRV(1)                          !curve thickness
-                call LINWID(1)                          !the linewidth (will be adjusted by PENWID instead)
-                call PENWID(1.0_wp*cth(i))               !the linewidth (allowing also values smaller than 1)
-                call INCMRK(0)                          !line
-                if (cltype(i) == 2) then                !symbols and line
-                    call INCMRK(1)                      !line connecting data points every n=1 datapoints will be plotted
-                    call MARKER(csymbtype(i))           !plot symbol type at point coordinates
-                    if (smallsymbs) then
-                        if (cBigDsymbs(i)) then
-                            call HSYMBL(bigsymbsize)    !symbol size
-                            call PENWID(1.3_wp*cth(i))   !the linewidth (allowing also values smaller than 1)
-                        else
-                            call PENWID(0.5_wp*cth(i))   !the linewidth (allowing also values smaller than 1)   
-                            call HSYMBL((symbsize*3)/4) !symbol size
-                        endif
-                    else
-                        call PENWID(0.85_wp*cth(i))      !the linewidth (allowing also values smaller than 1)
-                        if (cBigDsymbs(i)) then
-                            call HSYMBL(bigsymbsize)    !symbol size
-                        else   
-                            call HSYMBL(symbsize)       !symbol size
-                        endif
-                    endif
-                else if (cltype(i) > 2) then            !symbols without line
-                    call INCMRK(-1)                     !no line connecting data points, every n=1 datapoint will be plotted
-                    call MARKER(csymbtype(i))           !plot symbol type at point coordinates
-                    if (smallsymbs) then 
-                        if (cBigDsymbs(i)) then
-                            call HSYMBL(bigsymbsize)    !symbol size
-                            call PENWID(1.3_wp*cth(i))   !the linewidth (allowing also values smaller than 1)
-                        else     
-                            call PENWID(0.5_wp*cth(i))   !the linewidth (allowing also values smaller than 1)
-                            call HSYMBL(symbsize)       !symbol size
-                        endif
-                    else
-                        if (cBigDsymbs(i)) then
-                            call PENWID(1.3_wp*cth(i))   !the linewidth (allowing also values smaller than 1)
-                            call HSYMBL(bigsymbsize)    !symbol size
-                        else 
-                            call PENWID(1.0_wp*cth(i))   !the linewidth (allowing also values smaller than 1)    
-                            call HSYMBL(symbsize)       !symbol size
-                        endif
-                    endif
+            else
+                call PENWID(0.85_wp*cth(i))                                 !the linewidth (allowing also values smaller than 1)
+                if (cBigDsymbs(i)) then
+                    call HSYMBL(bigsymbsize)                                !symbol size
+                else
+                    call HSYMBL(symbsize)                                   !symbol size
                 endif
-                select case (clstyle(i))                !define the line style
-                case(1)
-                    call LNCAP ("ROUND")                ! ("LONG") ! line caps
-                    call SOLID
-                    NTYP = 0
-                case(2)
-                    call LNCAP ("CUT")                  !cut line caps
-                    call DASHM
-                    NTYP = 5
-                case(3)
-                    call LNCAP ("ROUND")                !rounded line caps
-                    call DASH
-                    NTYP = 2
-                case(4)                                 !MyDot style
-                    NRAY(1) = 1                         !Pen down
-                    NRAY(2) = int(1.5_wp*max(cth(i), 4.0_wp)) !NRAY(2) = 2*max(int(cth(i)), 3) !+4  !Pen up
-                    call LNCAP ("ROUND")                !rounded line caps
-                    call MYLINE (NRAY, 2)               !self defined line style "DOT" with size according to line thickness
-                    NTYP = 6
-                case(5)
-                    call LNCAP ("ROUND")                !rounded line caps
-                    call DOT
-                    NTYP = 1
-                case(6) !. - . - . my dash-dotted line style
-                    INRAY(1) = 1                        !Pen down
-                    INRAY(2) = 3*max(3, int(cth(i)))    !Pen up
-                    INRAY(3) = 4*max(3, int(cth(i)))    !Pen down
-                    INRAY(4) = 3*max(3, int(cth(i)))    !Pen up
-                    call LNCAP ("ROUND")                !rounded line caps
-                    call MYLINE (INRAY(1:4), 4)
-                    NTYP = 4
-                end select
-                call LNJOIN ("SHARP")                   !'SHARP' or 'TRUNC'
-                call NOCHEK                             !suppress warning of points lying outside of the plotting area
-                !now plot the selected curve:
-                N=rownr(i)
-                xax = 0.0_wp
-                yax = 0.0_wp
-                xax(1:N) = cxvals(i,1:N)
-                yax(1:N) = cyvals(i,1:N)
-                call CURVE(xax(1:N), yax(1:N),N)
-                if (ileg == 1) then                     !set the corresponding legend text and color:
-                    CSTR = trim(clegtxt(i))						
-                    if (len_trim(CSTR) > 1) then
-                        if (ILIN < 30) then             !only max. 30 curves attributes can be printed for the legend (current dislin limit)
-                            ILIN = ILIN+1
-                            !!change color in legends when the line color is white (to have some contrast to the white  background color):
-                            if (uselegpat) then
-                                if (ccolor(i) == 255) then !white
-                                    iclr = 0 !black
-                                else 
-                                    iclr = ccolor(i)
-                                endif 
-                                ityp = NTYP             !select a line style from the default styles, closest to the one of the custom types.
-                                call LEGPAT(ityp, int(cth(i)), csymbtype(i), iclr, -1, ILIN) !ILIN   
-                            endif
-                            call LEGVAL (1.0_wp, 'SYMBOL')           !symbol size in legend (default = 0.8_wp)
-                            call LEGLIN(CBUF, trim(CSTR), ILIN)     !define the legend line text									
-                        endif
-                    endif
+            endif
+        else if (cltype(i) > 2) then                                        !symbols without line
+            call INCMRK(-1)                                                 !no line connecting data points, every n=1 datapoint will be plotted
+            call MARKER(csymbtype(i))                                       !plot symbol type at point coordinates
+            if (smallsymbs) then
+                if (cBigDsymbs(i)) then
+                    call HSYMBL(bigsymbsize)                                !symbol size
+                    call PENWID(1.3_wp*cth(i))                              !the linewidth (allowing also values smaller than 1)
+                else
+                    call PENWID(0.5_wp*cth(i))                              !the linewidth (allowing also values smaller than 1)
+                    call HSYMBL(symbsize)                                   !symbol size
                 endif
-                if (any(cxyerror(i,1:N,1:4) > dtiny)) then
-                    call LINWID(1) 
-                    if (cltype(i) < 2) then             !no symbols, just line
-                        call PENWID(min(0.25_wp, max(0.1_wp, cth(i) / 5.0_wp))) 
-                        call HSYMBL(max(1,int(cth(i)/3.0_wp))) !set symbol size to tiny size
-                        call MARKER(-1)                 !suppress plotting symbol when only error bars are required here... call MARKER(3)
-                    else
-                        call PENWID(min(0.5_wp, max(0.2_wp, cth(i) / 3.0_wp))) 
-                        call MARKER(-1)                 !call MARKER(csymbtype(i))
-                    endif
-                    !draw vertical (y-axis) error bars:
-                    E1RAY(1:N) = cxyerror(i,1:N,3)      !error bars in y-axis
-                    E2RAY(1:N) = cxyerror(i,1:N,4)
-                    if (any(E1RAY(1:N) > dtiny) .or. any(E2RAY(1:N) > dtiny)) then
-                        call BARTYP ('VERT')
-                        call ERRBAR(xax(1:N), yax(1:N), E1RAY(1:N), E2RAY(1:N), N)  !vertical error bars
-                    endif
-                    !draw horizontal (x-axis) error bars:
-                    E1RAY(1:N) = cxyerror(i,1:N,1)      !error bars in x-axis
-                    E2RAY(1:N) = cxyerror(i,1:N,2)
-                    if (any(E1RAY(1:N) > dtiny) .or. any(E2RAY(1:N) > dtiny)) then
-                        call BARTYP ('HORI')
-                        call ERRBAR(xax(1:N), yax(1:N), E1RAY(1:N), E2RAY(1:N), N)  !horizontal error bars
-                    endif
+            else
+                if (cBigDsymbs(i)) then
+                    call PENWID(1.3_wp*cth(i))                              !the linewidth (allowing also values smaller than 1)
+                    call HSYMBL(bigsymbsize)                                !symbol size
+                else
+                    call PENWID(1.0_wp*cth(i))                              !the linewidth (allowing also values smaller than 1)
+                    call HSYMBL(symbsize)                                   !symbol size
                 endif
-                call LINWID(1)                          !reset the linewidth default value
-                call PENWID(1.0_wp)
-            endif !axisc 1 if
-        endif !ileg if
-    enddo !i, plot curves 1st axis
-enddo !ileg
+            endif
+        endif
+        select case (clstyle(i))                                            !define the line style
+        case(1)
+            call LNCAP ("ROUND")                                            !("LONG") line caps
+            call SOLID
+            NTYP = 0
+        case(2)
+            call LNCAP ("CUT")                                              !cut line caps
+            call DASHM
+            NTYP = 5
+        case(3)
+            call LNCAP ("ROUND")                                            !rounded line caps
+            call DASH
+            NTYP = 2
+        case(4)                                                             !MyDot style
+            NRAY(1) = 1                                                     !Pen down
+            NRAY(2) = int(1.5_wp*max(cth(i), 4.0_wp))                       !NRAY(2) = 2*max(int(cth(i)), 3) !+4  !Pen up
+            call LNCAP ("ROUND")                                            !rounded line caps
+            call MYLINE (NRAY, 2)                                           !self defined line style "DOT" with size according to line thickness
+            NTYP = 6
+        case(5)
+            call LNCAP ("ROUND")                                            !rounded line caps
+            call DOT
+            NTYP = 1
+        case(6)                                                             !. - . - . my dash-dotted line style
+            INRAY(1) = 1                                                    !Pen down
+            INRAY(2) = 3*max(3, int(cth(i)))                                !Pen up
+            INRAY(3) = 4*max(3, int(cth(i)))                                !Pen down
+            INRAY(4) = 3*max(3, int(cth(i)))                                !Pen up
+            call LNCAP ("ROUND")                                            !rounded line caps
+            call MYLINE (INRAY(1:4), 4)
+            NTYP = 4
+        end select
+        call LNJOIN ("SHARP")                                               !'SHARP' or 'TRUNC'
+        call NOCHEK                                                         !suppress warning of points lying outside of the plotting area
+        !now plot the selected curve:
+        N = rownr(i)
+        xax = 0.0_wp
+        yax = 0.0_wp
+        xax(1:N) = cxvals(1:N,i)
+        yax(1:N) = cyvals(1:N,i)
+        call CURVE(xax(1:N), yax(1:N), N)
+
+        !store customized legend entries:
+        if (clegplot(i)) then
+            if (ilin < max_legd_lin) then                                   !only max. max_legd_lin curves attributes can be printed for the legend (current dislin limit)
+                CSTR = trim(clegtxt(i))
+                if (cltype(i) > 2) then
+                    ityp = -1
+                else
+                    ityp = NTYP
+                endif
+                !change color in legends when the line color is white
+                !(to have some contrast to the white  background color):
+                if (ccolor(i) == 255) then                                  !white
+                    iclr = 0                                                !black
+                else
+                    iclr = -1
+                endif
+                if (index(CSTR, "other points (not shown)") > 0) then
+                    ityp = -1
+                    csymbtype(i) = -1
+                endif
+                ilin = ilin + 1
+                iray(ilin) = ilin
+                call LEGPAT(ityp, int(cth(i)), csymbtype(i), iclr, -1, ilin)
+                call LEGLIN(CBUF, trim(CSTR), ilin)
+            endif
+        endif
+
+        if (ccolor(i) < 0) then
+            if (customCol) then                                             !reset default color palette choice
+                call VLTFIL(trim(customcolfile), 'LOAD')
+            else
+                call SETVLT('RAIN')
+            endif
+        endif
+
+        if (any(cxyerror(1:4,1:N,i) > dtiny)) then
+            call LINWID(1)
+            if (cltype(i) < 2) then                     !no symbols, just line
+                call PENWID(min(0.25_wp, max(0.1_wp, cth(i) / 5.0_wp)))
+                call HSYMBL(max(1, int(cth(i) / 3.0_wp)))   !set symbol size to tiny size
+                call MARKER(-1)                         !suppress plotting symbol when only error bars are required here... call MARKER(3)
+            else
+                call PENWID(min(0.5_wp, max(0.2_wp, cth(i) / 3.0_wp)))
+                call MARKER(-1)                         !call MARKER(csymbtype(i))
+            endif
+            !draw vertical (y-axis) error bars:
+            E1RAY(1:N) = cxyerror(3,1:N,i)              !error bars in y-axis
+            E2RAY(1:N) = cxyerror(4,1:N,i)
+            if (any(E1RAY(1:N) > dtiny) .or. any(E2RAY(1:N) > dtiny)) then
+                call BARTYP ('VERT')
+                call ERRBAR(xax(1:N), yax(1:N), E1RAY(1:N), E2RAY(1:N), N)  !vertical error bars
+            endif
+            !draw horizontal (x-axis) error bars:
+            E1RAY(1:N) = cxyerror(1,1:N,i)              !error bars in x-axis
+            E2RAY(1:N) = cxyerror(2,1:N,i)
+            if (any(E1RAY(1:N) > dtiny) .or. any(E2RAY(1:N) > dtiny)) then
+                call BARTYP ('HORI')
+                call ERRBAR(xax(1:N), yax(1:N), E1RAY(1:N), E2RAY(1:N), N)  !horizontal error bars
+            endif
+        endif
+        call LINWID(1)                                  !reset the linewidth default value
+        call PENWID(1.0_wp)
+    endif !axisc 1 if
+enddo !i, plot curves 1st axis
 !--.
 if (len_trim(CBUF) > 1) then
     call SETVLT("RAIN")
-    call SETCLR(0)                                      !black
+    call SETCLR(0)                                                          !black
     call SOLID
-    call HEIGHT (Lsize)                                 !Legend font size
+    call HEIGHT (Lsize)                                                     !Legend font size
     call LEGTIT ("left y-axis:                ")
-!    call LEGTIT("")
     call LINESP(2.6_wp)
     if (.not. plotoverlay) then
 		if (showcustomcolbar) then
@@ -1187,18 +1205,22 @@ if (len_trim(CBUF) > 1) then
     else !plotoverlay
         call LEGPOS (2100, 40)     
     endif
-    call FRAME(0)                                       !no box around the legend
-    if (customCol) then                                 !read a custom colour table:
+    call FRAME(0)                                                           !no box around the legend
+    if (customCol) then                                                     !read a custom colour table:
         call VLTFIL(trim(customcolfile), "LOAD")
     else
-        call SETVLT("RAIN")                             !the Dislin rainbow palette
+        call SETVLT("RAIN")                                                 !the Dislin rainbow palette
     endif
     call SETCLR(0) !black
-    call LINWID( min( 3, max(1, int(maxval(cth(1:curvenr)))) ) ) !set here curve thickness of curve / points for all legend entries (as no curve-specific choice possible for now).
-    call LEGEND (CBUF, 3)
+    call LINWID( min( 3, max(1, int(maxval(cth(1:curvenr)))) ) )            !set here curve thickness of curve / points for all legend entries (as no curve-specific choice possible for now).
+    call LEGSEL(iray, size(iray))                                           !LEGSEL selects legend lines that are plotted by LEGEND.
+    call LEGVAL(1.0_wp, 'SYMBOL')                                           !symbol size in legend (default = 0.8_wp)
+    call LEGEND(CBUF, 3)
     call LINWID(1) !reset
+    deallocate(iray, CBUF)
 endif
 
+!---------
 if (showcustomcolbar) then  !plot a colour bar (z-axis) that has been defined by the used colours
     !plot a custom-made z-axis colour bar based on a collection of stacked coloured rectangles.
     !The colours were determined by the customized colour scaling used in showzcolbar(..) via defzcolval(..).
@@ -1208,7 +1230,7 @@ if (showcustomcolbar) then  !plot a colour bar (z-axis) that has been defined by
     nxpos = NXA + NXL + 100                     !middle of rectangle which is nxwid coordinate points wide in total
     nxwid = 50
     !use 96% of the y-axis length for color bar as default (for continuous scale):
-    ry = 0.96_wp*real(NYL, kind=wp)            !scaled preliminary y-axis length
+    ry = 0.96_wp*real(NYL, kind=wp)             !scaled preliminary y-axis length
     ntop = min(customzcolno(254), 254)
     N = floor(ry)
     i = (NYL -N)/2
@@ -1217,7 +1239,7 @@ if (showcustomcolbar) then  !plot a colour bar (z-axis) that has been defined by
     rinc = real(NYL, kind=wp) / real(ntop, kind=wp) !real-valued increment in plot coordinates
     rypos0 = real(NYA, kind=wp) - 0.5_wp*rinc   !y-coordinate of first point
     rypos = nint(rypos0)
-    Nheight = ceiling(rinc) +1              !integer rectangle height
+    Nheight = ceiling(rinc) +1                  !integer rectangle height
     do i = 1,ntop
         nypos = nint(rypos)
         call POINT(nxpos, nypos, nxwid, Nheight, customzcolno(i))
@@ -1244,11 +1266,50 @@ if (showcustomcolbar) then  !plot a colour bar (z-axis) that has been defined by
     endif
     call YAXIS(zcolbar0, zcolbar254, zcolbar0, zcolbarstep, NYL, trim(zaxislabel), 0, nxpos+nxwid/2, NYA)
 endif
+!---------
+
+!---------
+if (is_secondary_xaxis) then
+    !plot a secondary x=axis at the top of the graph with its own label and scale:
+    call GETPOS (NXA, NYA)
+    call GETLEN (NXL, NYL, NZL)
+    nxpos = NXA
+    nypos = NYA - NYL+1
+    call VLTFIL(trim(defaultColPath)//'RGBColTableRealWinXP8BitAZ.dat', 'LOAD')
+    call SETCLR(55) !grey
+    call SOLID
+    call PENWID(1.0_wp)
+    call LINWID(1)
+    call LNCAP ("LONG")
+    call TICKS (2, "X")
+    call HEIGHT(ceiling(0.7_wp*Numbsize))
+    call LABJUS('AUTO', 'X')
+    call CHASPC(-0.07_wp)
+    call LABDIS(-10, 'X')
+    call NAMDIS(-18, 'X')
+    call HNAME (ceiling(0.7_wp*Namesize))
+    CALL TICPOS ('LABELS', 'X')
+    if (logxaxis) then
+        call GAXPAR (log10(lowerxlimit2), log10(upperxlimit2), 'NOEXTEND', 'X', xminax, xmaxax, xlab, xstep, ndig)
+        xlab = ceiling(xminax)
+        xstep = min( xstep, anint((floor(xmaxax) - xlab) / 6.0_wp) )
+        call LABDIG (ndig, 'X')     !number of decimals x-axis
+        call LOGTIC ("FULL")        !"AUTO"
+        call LABELS("log", "X")
+        call XAXLG(xminax, xmaxax, xlab, xstep, NXL, trim(second_xaxis_label), -1, nxpos, nypos) 
+    else
+        call GAXPAR (lowerxlimit2, upperxlimit2, 'NOEXTEND', 'X', xminax, xmaxax, xlab, xstep, ndig)
+        call LABDIG (ndig, 'X')     !number of decimals x-axis
+        call XAXIS(xminax, xmaxax, xlab, xstep, NXL, trim(second_xaxis_label), 0, nxpos, nypos) 
+    endif
+endif
+!---------
 
 !1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st
 !1st                                     end of 1st y-axis                                    1st
 !1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st1st
     
+
 
 !2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd
 !2nd                                    start of 2nd y-axis                                   2nd
@@ -1398,14 +1459,17 @@ if (abs(maxval(yrayspec_r)-maxval(yrayspec_l)) > 1.0E-12_wp .or. abs(minval(yray
 endif
 
 !calculate and initialize number of lines of 2nd legend:
-CBUF = ""
 CSTR = ""
-NLIN = count(clegplot(1:curvenr) .and. cwaxis(1:curvenr) == 2)
-if (NLIN > 30) then !dislin currently can only store 30 curve (attributes) for legends
-    call LEGINI(CBUF, 30, NMAXLN)
-else
-    call LEGINI(CBUF, NLIN, NMAXLN)
+nlin = count(clegplot(1:curvenr) .and. cwaxis(1:curvenr) == 2)
+if (nlin > max_legd_lin) then
+    nlin = max_legd_lin
 endif
+nlin = max(1, nlin)
+allocate(iray(nlin))
+iray = 0
+allocate(character(len=nlin*NMAXLN) :: CBUF)
+call LEGINI(CBUF, nlin, NMAXLN)
+
 !check whether a special legend plotting mode is necessary to store curve attributes and change curve color of white curves for visible contrast in legend:
 if (any(clegplot(1:curvenr) .and. cwaxis(1:curvenr) == 2 .and. ccolor(1:curvenr) == 255)) then
     uselegpat = .true.
@@ -1414,7 +1478,7 @@ else
 endif
 
 !plot the curves on the 2nd axis ###
-ILIN = 0
+ilin = 0
 if (any(.not. clegplot(1:curvenr))) then
     legstop = 2
 else
@@ -1510,30 +1574,30 @@ do ileg = 1,legstop !loop two times over the curves, the first time to only plot
                 call NOCHEK  !suppress warning of points lying outside of the plotting area
                 !now plot the selected curve:
                 N = rownr(i)
-                xax(1:N) = cxvals(i,1:N)
-                yax(1:N) = cyvals(i,1:N)
-                call CURVE(xax(1:N),yax(1:N),N)
-                if (ileg == 1) then !set the corresponding legend text and color:
+                xax(1:N) = cxvals(1:N,i)
+                yax(1:N) = cyvals(1:N,i)
+                call CURVE(xax(1:N), yax(1:N) ,N)
+                if (ileg == 1) then                                     !set the corresponding legend text and color:
                     CSTR = trim(clegtxt(i))
                     if (len_trim(CSTR) > 1) then
-                        if (ILIN < 30) then !only max. 30 curves attributes can be printed for the legend (current dislin limit)
-                            ILIN = ILIN+1
+                        if (ilin < max_legd_lin) then                             !only max. max_legd_lin curves attributes can be printed for the legend (current dislin limit)
+                            ilin = ilin + 1
                             !!change color in legends when the line color is white (to have some contrast to the white  background color):
                             if (uselegpat) then
-                                if (ccolor(i) == 255) then !white
-                                    iclr = 0 !black
+                                if (ccolor(i) == 255) then              !white
+                                    iclr = 0                            !black
                                 else 
                                     iclr = ccolor(i)
                                 endif 
-                                ityp = NTYP !select a line style from the default styles, closest to the one of the custom types.
-                                call LEGPAT(ityp, int(cth(i)), csymbtype(i), iclr, -1, ILIN) !ILIN   
+                                ityp = NTYP                             !select a line style from the default styles, closest to the one of the custom types.
+                                call LEGPAT(ityp, int(cth(i)), csymbtype(i), iclr, -1, ilin) !ilin   
                             endif
-                            call LEGVAL (1.0_wp, 'SYMBOL') !symbol size in legend (default = 0.8_wp)
-                            call LEGLIN(CBUF, trim(CSTR), ILIN) !define the legend line text
+                            call LEGVAL (1.0_wp, 'SYMBOL')              !symbol size in legend (default = 0.8_wp)
+                            call LEGLIN(CBUF, trim(CSTR), ilin)         !define the legend line text
                         endif
                     endif
                 endif
-                if (any(cxyerror(i,1:N,1:4) > dtiny)) then
+                if (any(cxyerror(1:4,1:N,i) > dtiny)) then
                     call LINWID(1) 
                     if (cltype(i) < 2) then !no symbols, just line
                         call PENWID(min(0.25_wp, max(0.1_wp, cth(i) / 5.0_wp))) 
@@ -1544,15 +1608,15 @@ do ileg = 1,legstop !loop two times over the curves, the first time to only plot
                         call MARKER(-1) !call MARKER(csymbtype(i))
                     endif
                     !draw vertical (y-axis) error bars:
-                    E1RAY(1:N) = cxyerror(i,1:N,3) !error bars in y-axis
-                    E2RAY(1:N) = cxyerror(i,1:N,4)
+                    E1RAY(1:N) = cxyerror(3,1:N,i) !error bars in y-axis
+                    E2RAY(1:N) = cxyerror(4,1:N,i)
                     if (any(E1RAY(1:N) > dtiny) .or. any(E2RAY(1:N) > dtiny)) then
                         call BARTYP ('VERT')
                         call ERRBAR(xax(1:N), yax(1:N), E1RAY(1:N), E2RAY(1:N), N) !vertical error bars
                     endif
                     !draw horizontal (x-axis) error bars:
-                    E1RAY(1:N) = cxyerror(i,1:N,1) !error bars in x-axis
-                    E2RAY(1:N) = cxyerror(i,1:N,2)
+                    E1RAY(1:N) = cxyerror(1,1:N,i) !error bars in x-axis
+                    E2RAY(1:N) = cxyerror(2,1:N,i)
                     if (any(E1RAY(1:N) > dtiny) .or. any(E2RAY(1:N) > dtiny)) then
                         call BARTYP ('HORI')
                         call ERRBAR(xax(1:N), yax(1:N), E1RAY(1:N), E2RAY(1:N), N) !horizontal error bars
@@ -1597,6 +1661,7 @@ if (len_trim(CBUF) > 1) then
     call LINWID(min(3, int(maxval(cth(1:curvenr))))) !set here curve thickness of curve / points for all legend entries (as no curve-specific choice possible for now).
     call LEGEND (CBUF, 3)
     call LINWID(1) !reset
+    deallocate(CBUF)
 endif
   
 endif !2ndaxis 
@@ -1604,12 +1669,12 @@ endif !2ndaxis
 !2nd                                       end of 2nd y-axis                                  2nd
 !2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd2nd
 
-if(.not. plotoverlay) then
+if (.not. plotoverlay) then
     call SETVLT("RAIN") !the Dislin rainbow palette
     call COLOR("BLACK")
     call SOLID
-    call FRAME(1)
-    call BOX2D !plots a box around the axis system
+    !call FRAME(1)
+    !call BOX2D !plots a box around the axis system
 endif
     
 !Plot a number at coordinates NX,NY
@@ -1624,8 +1689,8 @@ endif
 if (messagebox) then
     !set the (initial) plot coordinates and properties of the message box:
     if (messboxpos_x == 0 .and. messboxpos_y == 0) then !the position was not set yet, so use default values
-        nxl = 1200
-        nyl = 120
+        nxl = 2240
+        nyl = 1600
     else
         nxl = messboxpos_x
         nyl = messboxpos_y
@@ -1672,7 +1737,7 @@ newplot = .true.
 cxvals = 0.0_wp
 cyvals = 0.0_wp
 cxyerror = 0.0_wp
-call DefinePlotData(cxvals(1,:), cyvals(1,:), cxyerror(1,:,1:4), 1, 0, 1, -1, 3, clegtxt(1), 1.0_wp)    !call here with no actual data to ensure reset of stored curve data.
+call DefinePlotData(cxvals(:,1), cyvals(:,1), cxyerror(1:4,:,1), 1, 0, 1, -1, 3, clegtxt(1), 1.0_wp)    !call here with no actual data to ensure reset of stored curve data.
 newplot = .true. !set it back for next plot page
 newplot2 = .true.
 newplot3 = .true.
@@ -1703,26 +1768,26 @@ slimplot = .false.
 squareplot = .false.
 equalfontwidth = .false.
 if (allocated(barcolset)) deallocate(barcolset)
+is_secondary_xaxis = .false.
     
 end subroutine PlotNow
 !=================================================================================================================
 
 
 !=================================================================================================================
-subroutine PlotPiechart(ptitle,outname_cplot,nneutral,nelectrol)
+subroutine PlotPiechart(ptitle, outname_cplot, nneutral, nelectrol)
 
 use dislin  !the DISLIN plotting library (www.dislin.de)
 
 implicit none
 !...
-integer :: NMAXLN
-parameter (NMAXLN = 75)
+integer,parameter :: NMAXLN = 75
 !...
 integer :: i,N,NXL,NYL,symbsize,xpos,ypos,xposstart,yposstart,xlen,ylen,k,lcount
 integer :: Tsize,Lsize,Namesize,Numbsize,pielablesize,nneutral,nelectrol
 integer,dimension(:),allocatable :: piecolset
 !...
-real(wp),dimension(ncprows) :: xax,yax
+real(wp),dimension(ncprows) :: xax, yax
 !...
 character(len=75),intent(in) :: outname_cplot
 character(len=75) :: outname_dislin
@@ -1874,8 +1939,8 @@ do i=1,curvenr
         !initialize Legend:  
         CBUFPIE = " "
         k = 1 + maxval(len_trim(cpielegtxt(i,1:N)))
-        call LEGINI(CBUFPIE,min(N,30), min(NMAXLN, k))
-        do k = 1,min(N,30)
+        call LEGINI(CBUFPIE, min(N,max_legd_lin), min(NMAXLN, k))
+        do k = 1,min(N,max_legd_lin)
             call LEGLIN(CBUFPIE,trim(cpielegtxt(i,k)),k)
         enddo
         !now plot the selected pie chart:
@@ -1974,8 +2039,8 @@ do i=1,curvenr
         !initialize Legend:  
         CBUFPIE = " "
         k = 1 + maxval(len_trim(cpielegtxt(i,1:N)))
-        call LEGINI(CBUFPIE,min(N,30), min(NMAXLN, k))
-        do k = 1,min(N,30)
+        call LEGINI(CBUFPIE, min(N,max_legd_lin), min(NMAXLN, k))
+        do k = 1,min(N,max_legd_lin)
             call LEGLIN(CBUFPIE,trim(cpielegtxt(i,k)),k)
         enddo
         !now plot the selected pie chart:
@@ -2113,9 +2178,9 @@ use qsort_c_module
 implicit none
 !...
 integer :: i,N,NXL,NYL,NZL,symbsize,nax,nc,inc
-integer :: NMAXLN, ypos, ylen, xlen, ydist
+integer :: ypos, ylen, xlen, ydist
 !...
-parameter (NMAXLN = 75)
+integer,parameter :: NMAXLN = 75
 !...
 integer :: NXA,NYA,Tsize,Lsize,Namesize,Numbsize,Lcompsize,ifault, &
 & nsteps,nneutral,nelectrol,Lheight,allocstat, NXDIG, NYDIG, NZDIG
@@ -2124,7 +2189,7 @@ real(wp) :: xmaxax, xminax, xlab, xstep, logymin, xmaxaxin, xminaxin, &
 & yminax, ymaxax, ylab, ystep, davg, sdspace, xmaxc, xminc, yscaler, sc
 real(wp),dimension(3) :: yrayspec_l, yrayspec_r
 real(wp),dimension(2) :: xrayspec
-real(wp),dimension(ncprows) :: xax,yax,xv,y0,xv2
+real(wp),dimension(ncprows) :: xax, yax, xv, xv2, y0
 real(wp),dimension(:,:),allocatable :: ysum
 real(wp),dimension(:),allocatable :: xray, yray1, yray2
 !...
@@ -2454,11 +2519,11 @@ do nax = 1,barpmodeno !the number of different axis-systems
         !initialize legend:  
         CBUF = " "
         inc = ncomp(nax)
-        call LEGINI(CBUF, min(inc,30), NMAXLN) !dislin can only stor 30 curve attributes currently
+        call LEGINI(CBUF, min(inc,max_legd_lin), NMAXLN) !dislin can only stor max_legd_lin curve attributes currently
         inc = 0
         do nc = 1,ncomp(nax)
             inc = inc+1
-            if (nc <= 30) then
+            if (nc <= max_legd_lin) then
                 call LEGLIN(CBUF,trim(cpielegtxt(nax,nc)),inc)
             endif
         enddo
@@ -2641,7 +2706,7 @@ do nax = 1,barpmodeno !the number of different axis-systems
     enddo !nc
     !Plot Bar-Legends:
     call PENWID(1.0_wp) !the linewidth (allowing also values smaller than 1)
-    sc = real(min(maxval(ncomp(:)),30), kind=wp)
+    sc = real(min(maxval(ncomp(:)),max_legd_lin), kind=wp)
     Lheight = ceiling( ylen*0.51_wp / sc ) !estimate the legend text height
     sc = min( 1.0_wp, 4.0_wp/real(barpmodeno, kind=wp) )
     Lheight = min(ceiling(Lcompsize*sc), Lheight)
@@ -2668,8 +2733,8 @@ call ENDGRF !set back level to 1 for plotting 3rd axis system!
 if (messagebox) then
     !set the (initial) plot coordinates and properties of the message box:
     if (messboxpos_x == 0 .and. messboxpos_y == 0) then !the position was not set yet, so use default values
-        nxl = 1200
-        nyl = 120
+        nxl = 2240
+        nyl = 1600
     else
         nxl = messboxpos_x
         nyl = messboxpos_y

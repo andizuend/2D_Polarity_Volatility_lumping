@@ -28,7 +28,7 @@
 			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
 		</Configuration>
 		<Configuration Name="Debug|x64" UseCompiler="ifxCompiler">
-			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OmitFramePointers="true" AdditionalIncludeDirectories="c:\dislin\ifc\real64" WarnDeclarations="true" WarnUnusedVariables="true" WarnInterfaces="true" RealKIND="realKIND8" FloatingPointExceptionHandling="fpe0" Traceback="true" BoundsCheck="true" ArrayShapeCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" UseMkl="mklSequential"/>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OmitFramePointers="true" AdditionalIncludeDirectories="c:\dislin\ifc\real64" WarnDeclarations="true" WarnUnusedVariables="true" WarnShape="true" WarnInterfaces="true" RealKIND="realKIND8" LocalSavedScalarsSNaN="true" InitArrays="true" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" Traceback="true" BoundsCheck="true" ArrayShapeCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebug" UseWindowsLibs="true" UseMkl="mklSequential"/>
 			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" IgnoreDefaultLibraryNames="LIBCMT" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="50000000" FixedBaseAddress="linkFixedBaseAddressNo" AdditionalDependencies="c:\dislin\disifl_d.lib c:\dislin\disifd_d.lib user32.lib gdi32.lib"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -39,7 +39,7 @@
 			<Tool Name="VFManifestTool" SuppressStartupBanner="true"/>
 		</Configuration>
 		<Configuration Name="Release|x64" UseCompiler="ifxCompiler">
-			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="c:\dislin\ifc" UseMkl="mklSequential"/>
+			<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="c:\dislin\ifc" FloatingPointExceptionHandling="fpe0" FloatingPointModel="source" UseMkl="mklSequential"/>
 			<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole" StackReserveSize="50000000" AdditionalDependencies="c:\dislin\disifl_d.lib c:\dislin\disifd_d.lib user32.lib gdi32.lib"/>
 			<Tool Name="VFResourceCompilerTool"/>
 			<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
@@ -53,18 +53,13 @@
 	<Files>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
 			<Filter Name="Tools">
-				<File RelativePath="C:\dislin\ifc\real64\dislin.f90">
-				</File>
-				<File RelativePath=".\dlasrt2.f90">
-				</File>
-				<File RelativePath=".\Mod_kinds.f90">
-				</File>
+				<File RelativePath="C:\dislin\ifc\real64\dislin.f90"/>
+				<File RelativePath=".\dlasrt2.f90"/>
+				<File RelativePath=".\Mod_kinds.f90"/>
 				<File RelativePath=".\ModCreatePlot.f90">
 				</File>
-				<File RelativePath=".\ModRoundScale.f90">
-				</File>
-				<File RelativePath=".\quicksort_algorithm.f90">
-				</File>
+				<File RelativePath=".\ModRoundScale.f90"/>
+				<File RelativePath=".\quicksort_algorithm.f90"/>
 			</Filter>
 			<File RelativePath=".\Main_CustomizedPlotting.f90">
 			</File>

@@ -20,7 +20,7 @@ contains
     !****************************************************************************************
 
     subroutine ReadDataFiles(fileStartNo, lumpResChar, nsets, inrows, CompPropData, LumpConcData, xgridl, ygridl, &
-                            & legendCompProp, legendLumpedConc, cPropDataExists, filenumber, YaxisChoice, &
+                            & legendCompProp, legendLumpedConc, cPropDataExists, filenumber, YaxisChoice, TKelvin, &
                             & clustNum, clustCenter, clustSurrogateIndx, clustPop, compCluster)
 
     use ModCreateplot, ONLY: rdefault
@@ -37,6 +37,7 @@ contains
     logical,dimension(:),intent(out) :: cPropDataExists
     character(len=10),dimension(:),intent(out) :: filenumber
     character(len=30),dimension(:),intent(out) :: YaxisChoice
+    real(wp),intent(out) :: TKelvin
     integer,intent(out) :: clustNum
     real(wp),dimension(:,:),allocatable,intent(out) :: clustCenter 
     integer,dimension(:),allocatable,intent(out) :: clustSurrogateIndx, clustPop !dimension covers all clusters
@@ -47,7 +48,7 @@ contains
     character(len=120) :: inputfolderpath
     character(len=50) :: dummy, namestem1, namestem2
     character(len=50),dimension(5) :: methodchar
-    character(len=300) :: namex, fname
+    character(len=300) :: namex, fname, tline
     character(len=300),dimension(2*size(legendCompProp)) :: infname
     logical :: fexists
     !..................
@@ -74,6 +75,7 @@ contains
     LumpConcData = rdefault
     filenumber = ""
     YaxisChoice = ""
+    TKelvin = 298.15_wp         ![K] default temperature if not different from file reading
     !---
     !determine existing file names to be read:
     ii = 0
@@ -128,7 +130,13 @@ contains
             open (NEWUNIT = un, FILE = trim(fname), STATUS="OLD")
             !---
             read(un,*) dummy    !read first line
-            read(un,*) dummy, dummy, dummy, dummy, dummy, dummy, dummy, dummy
+            read(un,'(A)') tline
+            !extract temperature from tline text:
+            ii = index(tline, "T =")
+            if (ii > 0 .and. ii < len_trim(tline)) then
+                read(tline(ii+4:ii+10),*) TKelvin
+            endif
+            !Lumping method ** FullSystem ** | Pure organic component properties | psat calculated by EVAP method at T = 298.15 K 
             read(un,*) dummy, dummy, YaxisChoice(k)  !read the YaxisChoice used for this file
             read(un,*) dummy, dummy, dummy
             read(un,*)          !read empty line
@@ -157,7 +165,7 @@ contains
             open (NEWUNIT = un, FILE = trim(fname), STATUS="OLD")
             !---
             read(un,*) dummy    !read first line
-            read(un,*) dummy, dummy, dummy, dummy, dummy, dummy, dummy, dummy
+            read(un,'(A)') tline
             read(un,*) dummy, dummy, YaxisChoice(k)  !read the YaxisChoice used for this file
             read(un,*) dummy, dummy, dummy
             read(un,*)          !read empty line
