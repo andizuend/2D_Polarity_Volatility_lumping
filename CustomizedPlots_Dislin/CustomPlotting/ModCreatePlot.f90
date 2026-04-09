@@ -470,7 +470,7 @@ integer,dimension(:),allocatable :: iray            !iray is used for legend lin
 integer,parameter :: NMAXLN = 75
 !...
 real(wp) :: StandardDev, xmaxax, xminax, xlab, xstep, yminax, ymaxax, ylab, ystep, logymin, &
-    & xminaxin, xmaxaxin, dtiny, rinc, ry, rypos, rypos0
+    & xminaxin, xmaxaxin, dtiny, rinc, ry, rypos, rypos0, xred, xgreen, xblue
 real(wp),dimension(3) :: xrayspec, yrayspec_l, yrayspec_r
 real(wp),dimension(:),allocatable :: nxray, nyray												
 real(wp),dimension(ncprows) :: xax, yax, E1RAY, E2RAY
@@ -1129,12 +1129,14 @@ do i = 1,curvenr
                 if (ccolor(i) == 255) then                                  !white
                     iclr = 0                                                !black
                 else
-                    iclr = -1
+                    iclr = abs(ccolor(i))
                 endif
                 if (index(CSTR, "other points (not shown)") > 0) then
                     ityp = -1
                     csymbtype(i) = -1
                 endif
+                CALL GETIND (iclr, xred, xgreen, xblue)                     !get the RGB values for given iclr index of current color table
+                iclr = intrgb(xred, xgreen, xblue)                          !generate an absolute RGB color index via intrgb RGB values to deal with multiple color palettes
                 ilin = ilin + 1
                 iray(ilin) = ilin
                 call LEGPAT(ityp, int(cth(i)), csymbtype(i), iclr, -1, ilin)
