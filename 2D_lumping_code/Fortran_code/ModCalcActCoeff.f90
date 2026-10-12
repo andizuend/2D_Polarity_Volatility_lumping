@@ -288,7 +288,7 @@ end interface
     mNeutral = XN(1:nneutral)/meanSolventMW                             ![mol/kg], the molalities of the neutrals
 
     !Addition of the moles of substance (neutral and ionic) per 1 kg of electrolyte-free solvent mixture
-    if (bisulfsyst) then    !update since it changes in DiffKsulfuricDissoc and DiffKcarbonateDissoc
+    if (bisulfsyst .or. bicarbsyst) then    !update since it changes in DiffKsulfuricDissoc and DiffKcarbonateDissoc
         SumIonMolalities = sum(SMA(1:Nanion)) +sum(SMC(1:Ncation))
     endif
     sum_molalities = sum(mNeutral) + SumIonMolalities                   !sum of all molalities
